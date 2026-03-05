@@ -102,40 +102,6 @@
   </div>
 </div>
 <div id="message" style="display:none;"></div>
-<div id="boss-bar" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#000; border-top:2px solid #800; padding:8px 20px; z-index:50; flex-direction:column; align-items:center; gap:4px;">
-  <div style="color:#f55; font-size:11px; letter-spacing:5px; text-shadow:0 0 8px #f00;">✦ RED DOT ✦</div>
-  <div style="display:flex; align-items:center; gap:10px; width:100%; max-width:600px;">
-    <div style="position:relative; flex:1; height:16px; background:#1a0000; border:1px solid #600; border-radius:2px; overflow:hidden;">
-      <div id="boss-bar-fill" style="position:absolute; top:0; left:0; height:100%; width:100%; background:linear-gradient(90deg,#a00,#f33,#f88); border-radius:2px; transition:width 0.3s;"></div>
-      <div id="boss-bar-shimmer" style="position:absolute; top:0; left:-60%; width:40%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent); animation:bossShimmer 2s infinite;"></div>
-    </div>
-    <div id="boss-bar-text" style="color:#f55; font-size:12px; letter-spacing:2px; min-width:75px; text-align:right; font-family:'Courier New',monospace;">100 / 100</div>
-  </div>
-</div>
-
-<!-- Story Mode -->
-<div id="story-screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:200; flex-direction:column; align-items:center; justify-content:center;">
-  <canvas id="storyCanvas" style="display:block; max-width:100%; max-height:100vh;"></canvas>
-  <div id="story-hud" style="position:fixed; top:10px; left:0; right:0; display:flex; justify-content:center; gap:40px; color:#ff0; font-family:'Courier New',monospace; font-size:14px; letter-spacing:3px; text-shadow:0 0 8px #ff0; pointer-events:none;">
-    <span>🍌 ESCAPE THE BANANA</span>
-    <span id="story-status"></span>
-  </div>
-  <div id="story-crosshair" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); color:#fff; font-size:18px; opacity:0.5; pointer-events:none;">+</div>
-  <button onclick="exitStoryMode()" style="position:fixed; top:10px; right:16px; background:#000; border:1px solid #555; color:#555; padding:4px 14px; font-size:11px; letter-spacing:2px; cursor:pointer; font-family:'Courier New',monospace; z-index:210;">✕ MENU</button>
-  <div id="story-win" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:220; flex-direction:column; align-items:center; justify-content:center; gap:20px;">
-    <div style="color:#0f0; font-size:48px; font-weight:bold; letter-spacing:8px; text-shadow:0 0 30px #0f0;">YOU ESCAPED</div>
-    <div style="color:#ff0; font-size:18px; letter-spacing:4px;">the banana was defeated</div>
-    <button onclick="exitStoryMode()" style="background:#000; border:2px solid #0f0; color:#0f0; padding:12px 40px; font-size:16px; letter-spacing:4px; cursor:pointer; font-family:'Courier New',monospace; margin-top:10px;">MENU</button>
-  </div>
-  <div id="story-dead" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(80,0,0,0.92); z-index:220; flex-direction:column; align-items:center; justify-content:center; gap:20px;">
-    <div style="color:#f00; font-size:72px; font-weight:bold; letter-spacing:12px; text-shadow:0 0 40px #f00;">🍌</div>
-    <div style="color:#f00; font-size:36px; font-weight:bold; letter-spacing:8px;">BANANA GOT YOU</div>
-    <button onclick="restartStoryMode()" style="background:#000; border:2px solid #f00; color:#f00; padding:10px 30px; font-size:14px; letter-spacing:4px; cursor:pointer; font-family:'Courier New',monospace;">RETRY</button>
-    <button onclick="exitStoryMode()" style="background:#000; border:1px solid #555; color:#555; padding:8px 24px; font-size:12px; letter-spacing:3px; cursor:pointer; font-family:'Courier New',monospace;">MENU</button>
-  </div>
-</div>
-
-<div id="menu-screen" style="display:flex; position:fixed; top:0; left:0; right:0; bottom:0; width:100%; height:100%; background:#000; z-index:300; align-items:center; justify-content:center; flex-direction:column; gap:18px; overflow-y:auto; padding:20px 0;">
 
 <!-- Mobile D-pad (normal game) -->
 <div id="mobile-dpad" style="display:none; position:fixed; bottom:20px; left:20px; z-index:150; user-select:none;">
@@ -299,87 +265,6 @@
     <button class="menu-btn" id="btn-extreme" onclick="selectDifficulty('extreme')" onmouseenter="previewDifficulty('extreme')" style="border-color:#f0f; color:#f0f;">
       EXTREME<br><span style="font-size:10px; letter-spacing:1px; opacity:0.7;">NIGHTMARE</span>
     </button>
-    <button class="menu-btn" id="btn-extreme" onclick="selectDifficulty('extreme')" style="border-color:#f0f; color:#f0f;">
-      EXTREME<br><span style="font-size:10px; letter-spacing:1px; opacity:0.7;">NIGHTMARE</span>
-    </button>
-  </div>
-  <button id="sound-toggle-btn" onclick="toggleSound()" style="display:none;">🔊 SOUND: ON</button>
-
-  <div style="display:flex; gap:10px; align-items:flex-start;">
-  <!-- Modifiers panel -->
-  <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
-    <button onclick="toggleModPanel()" id="mod-panel-btn" style="background:#000; border:1px solid #444; color:#666; padding:6px 22px; font-size:12px; letter-spacing:3px; cursor:pointer; font-family:'Courier New',monospace;">⚙ MODIFIERS ▾</button>
-    <div id="mod-panel" style="display:none; flex-direction:column; gap:6px; max-height:340px; overflow-y:auto; padding-right:4px;">
-    <div class="mod-row" onclick="toggleMod('rifle')" id="mod-rifle" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-rifle">☐</span>
-      <span class="mod-label">🔫 RIFLE MODE <span style="color:#555;font-size:10px;">aim, shoot, one shot kill</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('portals')" id="mod-portals" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-portals">☐</span>
-      <span class="mod-label">🌀 PORTALS <span style="color:#555;font-size:10px;">2 portals, anyone can use</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('destroyer')" id="mod-destroyer" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-destroyer">☐</span>
-      <span class="mod-label">💥 DESTROYER <span style="color:#555;font-size:10px;">red dot breaks walls</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('bots')" id="mod-bots" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-bots">☐</span>
-      <span class="mod-label">👾 16 BOTS <span style="color:#555;font-size:10px;">sixteen red hunters</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('twoplayer')" id="mod-twoplayer" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-twoplayer">☐</span>
-      <span class="mod-label">👥 2 PLAYER <span style="color:#555;font-size:10px;">co-op escape together</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('twovs')" id="mod-twovs" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-twovs">☐</span>
-      <span class="mod-label">⚔️ 2 PLAYER VS <span style="color:#555;font-size:10px;">p2 is the killer</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('magnet')" id="mod-magnet" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-magnet">☐</span>
-      <span class="mod-label">🧲 MAGNET <span style="color:#555;font-size:10px;">coins come to you, dot runs away</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('hammer')" id="mod-hammer" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-hammer">☐</span>
-      <span class="mod-label">🔨 HAMMER <span style="color:#555;font-size:10px;">red dot throws hammer at you</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('oneexit')" id="mod-oneexit" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-oneexit">☐</span>
-      <span class="mod-label">🚪 ONE EXIT <span style="color:#555;font-size:10px;">no coins — just find the door</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('hiddencams')" id="mod-hiddencams" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-hiddencams">☐</span>
-      <span class="mod-label">📷 HIDDEN CAMERAS <span style="color:#555;font-size:10px;">always see the red dot</span></span>
-    </div>
-    </div>
-  </div>
-
-  <!-- Cosmetics panel -->
-  <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
-    <button onclick="toggleCosmeticPanel()" id="cosmetic-panel-btn" style="background:#000; border:1px solid #444; color:#666; padding:6px 22px; font-size:12px; letter-spacing:3px; cursor:pointer; font-family:'Courier New',monospace;">✨ COSMETICS ▾</button>
-    <div id="cosmetic-panel" style="display:none; flex-direction:column; gap:6px;">
-    <div class="mod-row" onclick="toggleSound()" style="border:1px solid #333; padding:8px 20px;">
-      <span id="sound-cosmetic-check" style="margin-right:8px; color:#4af;">🔊</span>
-      <span class="mod-label">MUTE <span style="color:#555;font-size:10px;">toggle sound on/off</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('bossbar')" id="mod-bossbar" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-bossbar">☐</span>
-      <span class="mod-label">👑 BOSS BAR <span style="color:#555;font-size:10px;">red dot has a health bar</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('goofymsgs')" id="mod-goofymsgs" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-goofymsgs">☐</span>
-      <span class="mod-label">😂 GOOFY AH MESSAGES <span style="color:#555;font-size:10px;">ez or lol</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('broccolidog')" id="mod-broccolidog" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-broccolidog">☐</span>
-      <span class="mod-label">🥦🐶 BROCCOLI DOG <span style="color:#555;font-size:10px;">red dot flashes broccoli ↔ dog</span></span>
-    </div>
-    </div>
-  </div>
-  </div>
-
-  <div style="display:flex; gap:16px; align-items:center;">
-    <button onclick="startFromMenu()" style="background:#000; border:2px solid #fff; color:#fff; padding:12px 50px; font-size:20px; letter-spacing:6px; cursor:pointer; font-family:'Courier New',monospace; text-transform:uppercase;">PLAY</button>
-    <button onclick="startStoryMode()" style="background:#000; border:2px solid #ff0; color:#ff0; padding:12px 30px; font-size:14px; letter-spacing:4px; cursor:pointer; font-family:'Courier New',monospace; text-transform:uppercase; text-shadow:0 0 8px #ff0;">🍌 STORY MODE</button>
   </div>
   <button id="sound-toggle-btn" onclick="toggleSound()" style="display:none;">🔊 SOUND: ON</button>
 
