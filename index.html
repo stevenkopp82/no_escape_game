@@ -108,6 +108,28 @@
   </div>
 </div>
 
+<!-- Story Mode -->
+<div id="story-screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:200; flex-direction:column; align-items:center; justify-content:center;">
+  <canvas id="storyCanvas" style="display:block; max-width:100%; max-height:100vh;"></canvas>
+  <div id="story-hud" style="position:fixed; top:10px; left:0; right:0; display:flex; justify-content:center; gap:40px; color:#ff0; font-family:'Courier New',monospace; font-size:14px; letter-spacing:3px; text-shadow:0 0 8px #ff0; pointer-events:none;">
+    <span>🍌 ESCAPE THE BANANA</span>
+    <span id="story-status"></span>
+  </div>
+  <div id="story-crosshair" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); color:#fff; font-size:18px; opacity:0.5; pointer-events:none;">+</div>
+  <button onclick="exitStoryMode()" style="position:fixed; top:10px; right:16px; background:#000; border:1px solid #555; color:#555; padding:4px 14px; font-size:11px; letter-spacing:2px; cursor:pointer; font-family:'Courier New',monospace; z-index:210;">✕ MENU</button>
+  <div id="story-win" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:220; flex-direction:column; align-items:center; justify-content:center; gap:20px;">
+    <div style="color:#0f0; font-size:48px; font-weight:bold; letter-spacing:8px; text-shadow:0 0 30px #0f0;">YOU ESCAPED</div>
+    <div style="color:#ff0; font-size:18px; letter-spacing:4px;">the banana was defeated</div>
+    <button onclick="exitStoryMode()" style="background:#000; border:2px solid #0f0; color:#0f0; padding:12px 40px; font-size:16px; letter-spacing:4px; cursor:pointer; font-family:'Courier New',monospace; margin-top:10px;">MENU</button>
+  </div>
+  <div id="story-dead" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(80,0,0,0.92); z-index:220; flex-direction:column; align-items:center; justify-content:center; gap:20px;">
+    <div style="color:#f00; font-size:72px; font-weight:bold; letter-spacing:12px; text-shadow:0 0 40px #f00;">🍌</div>
+    <div style="color:#f00; font-size:36px; font-weight:bold; letter-spacing:8px;">BANANA GOT YOU</div>
+    <button onclick="restartStoryMode()" style="background:#000; border:2px solid #f00; color:#f00; padding:10px 30px; font-size:14px; letter-spacing:4px; cursor:pointer; font-family:'Courier New',monospace;">RETRY</button>
+    <button onclick="exitStoryMode()" style="background:#000; border:1px solid #555; color:#555; padding:8px 24px; font-size:12px; letter-spacing:3px; cursor:pointer; font-family:'Courier New',monospace;">MENU</button>
+  </div>
+</div>
+
 <div id="menu-screen" style="display:flex; position:fixed; top:0; left:0; right:0; bottom:0; width:100%; height:100%; background:#000; z-index:300; align-items:center; justify-content:center; flex-direction:column; gap:18px; overflow-y:auto; padding:20px 0;">
 
   <!-- ? button top-right -->
@@ -176,8 +198,10 @@
       EXTREME<br><span style="font-size:10px; letter-spacing:1px; opacity:0.7;">NIGHTMARE</span>
     </button>
   </div>
-  <button id="sound-toggle-btn" onclick="toggleSound()" style="background:#000; border:2px solid #4af; color:#4af; padding:8px 24px; font-size:15px; letter-spacing:4px; cursor:pointer; font-family:'Courier New',monospace;">🔊 SOUND: ON</button>
+  <button id="sound-toggle-btn" onclick="toggleSound()" style="display:none;">🔊 SOUND: ON</button>
 
+  <div style="display:flex; gap:10px; align-items:flex-start;">
+  <!-- Modifiers panel -->
   <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
     <button onclick="toggleModPanel()" id="mod-panel-btn" style="background:#000; border:1px solid #444; color:#666; padding:6px 22px; font-size:12px; letter-spacing:3px; cursor:pointer; font-family:'Courier New',monospace;">⚙ MODIFIERS ▾</button>
     <div id="mod-panel" style="display:none; flex-direction:column; gap:6px; max-height:340px; overflow-y:auto; padding-right:4px;">
@@ -205,21 +229,9 @@
       <span class="mod-check" id="chk-twovs">☐</span>
       <span class="mod-label">⚔️ 2 PLAYER VS <span style="color:#555;font-size:10px;">p2 is the killer</span></span>
     </div>
-    <div class="mod-row" onclick="toggleMod('bossbar')" id="mod-bossbar" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-bossbar">☐</span>
-      <span class="mod-label">👑 BOSS BAR <span style="color:#555;font-size:10px;">red dot has a health bar</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('goofymsgs')" id="mod-goofymsgs" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-goofymsgs">☐</span>
-      <span class="mod-label">😂 GOOFY AH MESSAGES <span style="color:#555;font-size:10px;">ez or lol</span></span>
-    </div>
     <div class="mod-row" onclick="toggleMod('magnet')" id="mod-magnet" style="border:1px solid #333; padding:8px 20px;">
       <span class="mod-check" id="chk-magnet">☐</span>
       <span class="mod-label">🧲 MAGNET <span style="color:#555;font-size:10px;">coins come to you, dot runs away</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('broccolidog')" id="mod-broccolidog" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-broccolidog">☐</span>
-      <span class="mod-label">🥦🐶 BROCCOLI DOG <span style="color:#555;font-size:10px;">red dot flashes broccoli ↔ dog</span></span>
     </div>
     <div class="mod-row" onclick="toggleMod('hammer')" id="mod-hammer" style="border:1px solid #333; padding:8px 20px;">
       <span class="mod-check" id="chk-hammer">☐</span>
@@ -229,10 +241,41 @@
       <span class="mod-check" id="chk-oneexit">☐</span>
       <span class="mod-label">🚪 ONE EXIT <span style="color:#555;font-size:10px;">no coins — just find the door</span></span>
     </div>
+    <div class="mod-row" onclick="toggleMod('hiddencams')" id="mod-hiddencams" style="border:1px solid #333; padding:8px 20px;">
+      <span class="mod-check" id="chk-hiddencams">☐</span>
+      <span class="mod-label">📷 HIDDEN CAMERAS <span style="color:#555;font-size:10px;">always see the red dot</span></span>
+    </div>
     </div>
   </div>
 
-  <button onclick="startFromMenu()" style="background:#000; border:2px solid #fff; color:#fff; padding:12px 50px; font-size:20px; letter-spacing:6px; cursor:pointer; font-family:'Courier New',monospace; text-transform:uppercase;">PLAY</button>
+  <!-- Cosmetics panel -->
+  <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+    <button onclick="toggleCosmeticPanel()" id="cosmetic-panel-btn" style="background:#000; border:1px solid #444; color:#666; padding:6px 22px; font-size:12px; letter-spacing:3px; cursor:pointer; font-family:'Courier New',monospace;">✨ COSMETICS ▾</button>
+    <div id="cosmetic-panel" style="display:none; flex-direction:column; gap:6px;">
+    <div class="mod-row" onclick="toggleSound()" style="border:1px solid #333; padding:8px 20px;">
+      <span id="sound-cosmetic-check" style="margin-right:8px; color:#4af;">🔊</span>
+      <span class="mod-label">MUTE <span style="color:#555;font-size:10px;">toggle sound on/off</span></span>
+    </div>
+    <div class="mod-row" onclick="toggleMod('bossbar')" id="mod-bossbar" style="border:1px solid #333; padding:8px 20px;">
+      <span class="mod-check" id="chk-bossbar">☐</span>
+      <span class="mod-label">👑 BOSS BAR <span style="color:#555;font-size:10px;">red dot has a health bar</span></span>
+    </div>
+    <div class="mod-row" onclick="toggleMod('goofymsgs')" id="mod-goofymsgs" style="border:1px solid #333; padding:8px 20px;">
+      <span class="mod-check" id="chk-goofymsgs">☐</span>
+      <span class="mod-label">😂 GOOFY AH MESSAGES <span style="color:#555;font-size:10px;">ez or lol</span></span>
+    </div>
+    <div class="mod-row" onclick="toggleMod('broccolidog')" id="mod-broccolidog" style="border:1px solid #333; padding:8px 20px;">
+      <span class="mod-check" id="chk-broccolidog">☐</span>
+      <span class="mod-label">🥦🐶 BROCCOLI DOG <span style="color:#555;font-size:10px;">red dot flashes broccoli ↔ dog</span></span>
+    </div>
+    </div>
+  </div>
+  </div>
+
+  <div style="display:flex; gap:16px; align-items:center;">
+    <button onclick="startFromMenu()" style="background:#000; border:2px solid #fff; color:#fff; padding:12px 50px; font-size:20px; letter-spacing:6px; cursor:pointer; font-family:'Courier New',monospace; text-transform:uppercase;">PLAY</button>
+    <button onclick="startStoryMode()" style="background:#000; border:2px solid #ff0; color:#ff0; padding:12px 30px; font-size:14px; letter-spacing:4px; cursor:pointer; font-family:'Courier New',monospace; text-transform:uppercase; text-shadow:0 0 8px #ff0;">🍌 STORY MODE</button>
+  </div>
 </div>
 
 <style>
@@ -278,12 +321,22 @@
 // Menu / difficulty / sound / modifiers
 let currentDifficulty = 'medium';
 let soundEnabled = true;
-const modifiers = { rifle: false, shoot: false, nocooldown: false, oneshot: false, portals: false, destroyer: false, bots: false, twoplayer: false, twovs: false, bossbar: false, goofymsgs: false, magnet: false, broccolidog: false, hammer: false, oneexit: false };
+const modifiers = { rifle: false, shoot: false, nocooldown: false, oneshot: false, portals: false, destroyer: false, bots: false, twoplayer: false, twovs: false, bossbar: false, goofymsgs: false, magnet: false, broccolidog: false, hammer: false, oneexit: false, hiddencams: false };
 
 function toggleHelp() {
   const o = document.getElementById('help-overlay');
   if (!o) return;
   o.style.display = o.style.display === 'flex' ? 'none' : 'flex';
+}
+
+function toggleCosmeticPanel() {
+  const panel = document.getElementById('cosmetic-panel');
+  const btn = document.getElementById('cosmetic-panel-btn');
+  if (!panel || !btn) return;
+  const open = panel.style.display === 'flex';
+  panel.style.display = open ? 'none' : 'flex';
+  btn.textContent = open ? '✨ COSMETICS ▾' : '✨ COSMETICS ▴';
+  btn.style.color = open ? '#666' : '#aaa';
 }
 
 function toggleModPanel() {
@@ -333,7 +386,10 @@ function selectDifficulty(d) {
 
 function toggleSound() {
   soundEnabled = !soundEnabled;
-  document.getElementById('sound-toggle-btn').textContent = soundEnabled ? '🔊 SOUND: ON' : '🔇 SOUND: OFF';
+  const oldBtn = document.getElementById('sound-toggle-btn');
+  if (oldBtn) oldBtn.textContent = soundEnabled ? '🔊 SOUND: ON' : '🔇 SOUND: OFF';
+  const icon = document.getElementById('sound-cosmetic-check');
+  if (icon) { icon.textContent = soundEnabled ? '🔊' : '🔇'; icon.style.color = soundEnabled ? '#4af' : '#555'; }
 }
 
 function startFromMenu() {
@@ -433,13 +489,35 @@ function initGame() {
   // Player at top-left area
   player = {c: 1, r: 1, x: 1*CELL+CELL/2, y: 1*CELL+CELL/2};
 
-  // Player 2: spawn near bottom-right open cell if 2-player mode
+  // Player 2 spawn: adjacent to P1 in co-op, far from P1 in vs
   if (modifiers.twoplayer || modifiers.twovs) {
-    let p2candidates = open.filter(p => !(p.c===1 && p.r===1));
-    let p2start = p2candidates.reduce((best, p) => {
-      return (Math.abs(p.c-1)+Math.abs(p.r-1)) > (Math.abs(best.c-1)+Math.abs(best.r-1)) ? p : best;
-    }, p2candidates[0]);
-    player2 = {c: p2start.c, r: p2start.r, x: p2start.c*CELL+CELL/2, y: p2start.r*CELL+CELL/2};
+    let p2spawn = null;
+    if (modifiers.twovs) {
+      // VS: killer spawns as far from P1 as possible
+      let bestD = -1;
+      for (let p of open) {
+        if (p.c===1&&p.r===1) continue;
+        const d = Math.abs(p.c-1)+Math.abs(p.r-1);
+        if (d > bestD) { bestD=d; p2spawn=p; }
+      }
+    } else {
+      // Co-op: spawn adjacent to P1
+      const adjacent = [[2,1],[1,2],[3,1],[1,3]];
+      for (let [c,r] of adjacent) {
+        if (c>=0&&c<COLS&&r>=0&&r<ROWS&&maze[r][c]===0) { p2spawn={c,r}; break; }
+      }
+      // Fallback: nearest open cell to P1
+      if (!p2spawn) {
+        let bestD = 999;
+        for (let p of open) {
+          if (p.c===1&&p.r===1) continue;
+          const d = Math.abs(p.c-1)+Math.abs(p.r-1);
+          if (d < bestD) { bestD=d; p2spawn=p; }
+        }
+      }
+    }
+    p2spawn = p2spawn || open[1];
+    player2 = {c: p2spawn.c, r: p2spawn.r, x: p2spawn.c*CELL+CELL/2, y: p2spawn.r*CELL+CELL/2};
   } else {
     player2 = null;
   }
@@ -754,7 +832,24 @@ document.addEventListener('keydown', e => {
   // Player 1 repel: E
   if ((e.key === 'e' || e.key === 'E') && !gameOver && !won) {
     const now = performance.now();
-    if (!repelActive && now >= repelCooldownEnd) {
+    if (modifiers.twovs && player2) {
+      // In vs mode: repel pushes P2 away from P1
+      if (!repelActive && now >= repelCooldownEnd) {
+        repelActive = true;
+        repelFreezeEnd = now + REPEL_FREEZE_MS;
+        repelCooldownEnd = repelFreezeEnd + REPEL_COOLDOWN_MS;
+        repelFlash = 20;
+        // Push P2 to farthest open cell from P1
+        let best = null, bestD = -1;
+        for (let r2=0;r2<ROWS;r2++) for (let c2=0;c2<COLS;c2++) {
+          if (maze[r2][c2]===0) {
+            const d = Math.abs(c2-player.c)+Math.abs(r2-player.r);
+            if (d > bestD) { bestD=d; best={c:c2,r:r2}; }
+          }
+        }
+        if (best) { player2.c=best.c; player2.r=best.r; player2.x=best.c*CELL+CELL/2; player2.y=best.r*CELL+CELL/2; }
+      }
+    } else if (!repelActive && now >= repelCooldownEnd) {
       activateRepel(now);
     }
   }
@@ -1010,11 +1105,23 @@ function draw(now) {
     Math.abs(enemy.c - player.c) + Math.abs(enemy.r - player.r),
     modifiers.twoplayer && player2 ? Math.abs(enemy.c - player2.c) + Math.abs(enemy.r - player2.r) : 999
   );
-  const enemyAlpha = enemyDist <= 6 ? 1 : enemyDist <= 8 ? (8 - enemyDist) / 2 : 0;
+  const enemyAlpha = modifiers.hiddencams
+    ? (enemyDist <= 6 ? 1 : 0.35 + 0.15*Math.sin(now/300)) // always visible, dim when far
+    : (enemyDist <= 6 ? 1 : enemyDist <= 8 ? (8 - enemyDist) / 2 : 0);
   if (enemyAlpha > 0) {
   let pulse = 0.7 + 0.3*Math.sin(now/200);
   ctx.save();
   ctx.globalAlpha = enemyAlpha;
+  // Hidden cams: draw a glowing red outline ring when enemy is out of normal range
+  if (modifiers.hiddencams && enemyDist > 6) {
+    ctx.shadowBlur = 18 + 8*Math.sin(now/200);
+    ctx.shadowColor = '#f00';
+    ctx.strokeStyle = `rgba(255,30,30,${0.6 + 0.4*Math.sin(now/200)})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(enemy.x, enemy.y, 16 + 2*Math.sin(now/150), 0, Math.PI*2);
+    ctx.stroke();
+  }
   // Destroyer: extra crackling orange outer ring
   if (modifiers.destroyer) {
     ctx.shadowBlur = 30;
@@ -1923,6 +2030,405 @@ function scheduleLaugh() {
 
 // Game starts from menu — don't auto-start
 // initGame() and gameLoop() are called via startFromMenu()
+
+// ═══════════════════════════════════════
+// STORY MODE — First-person raycaster
+// ═══════════════════════════════════════
+const storyCanvas = document.getElementById('storyCanvas');
+const sCtx = storyCanvas.getContext('2d');
+const SW = 640, SH = 480;
+storyCanvas.width = SW; storyCanvas.height = SH;
+
+let storyActive = false;
+let storyAnimFrame = null;
+let storyMaze = null;
+let storyGameOver = false;
+let storyWon = false;
+
+// Player state
+let sp = { x:0, y:0, angle:0 };
+// Banana enemy state
+let sb = { x:0, y:0 };
+let sbMoveTimer = 0;
+const SB_SPEED = 50; // frames per step
+
+// Exit cell for story mode
+let storyExit = {c:0, r:0};
+
+// Story repel state
+const STORY_REPEL_FREEZE_MS = 1500;
+const STORY_REPEL_COOLDOWN_MS = 5000;
+let storyRepelActive = false;
+let storyRepelFreezeEnd = 0;
+let storyRepelCooldownEnd = 0;
+let storyRepelFlash = 0;
+
+// Key state
+const sKeys = {};
+
+function startStoryMode() {
+  storyActive = true;
+  storyGameOver = false;
+  storyWon = false;
+  const ss = document.getElementById('story-screen');
+  const ms = document.getElementById('menu-screen');
+  const sw = document.getElementById('story-win');
+  const sd = document.getElementById('story-dead');
+  if (ms) ms.style.display = 'none';
+  if (ss) ss.style.display = 'flex';
+  if (sw) sw.style.display = 'none';
+  if (sd) sd.style.display = 'none';
+  initStory();
+  document.addEventListener('keydown', storyKeyDown);
+  document.addEventListener('keyup', storyKeyUp);
+  storyAnimFrame = requestAnimationFrame(storyLoop);
+}
+
+function restartStoryMode() {
+  storyGameOver = false;
+  storyWon = false;
+  const sw = document.getElementById('story-win');
+  const sd = document.getElementById('story-dead');
+  if (sw) sw.style.display = 'none';
+  if (sd) sd.style.display = 'none';
+  initStory();
+  if (!storyAnimFrame) storyAnimFrame = requestAnimationFrame(storyLoop);
+}
+
+function exitStoryMode() {
+  storyActive = false;
+  if (storyAnimFrame) { cancelAnimationFrame(storyAnimFrame); storyAnimFrame = null; }
+  document.removeEventListener('keydown', storyKeyDown);
+  document.removeEventListener('keyup', storyKeyUp);
+  const ss = document.getElementById('story-screen');
+  const ms = document.getElementById('menu-screen');
+  if (ss) ss.style.display = 'none';
+  if (ms) ms.style.display = 'flex';
+}
+
+function storyKeyDown(e) {
+  sKeys[e.key] = true;
+  // Repel: E key
+  if ((e.key === 'e' || e.key === 'E') && !storyGameOver && !storyWon) {
+    const now = performance.now();
+    if (!storyRepelActive && now >= storyRepelCooldownEnd) {
+      storyRepelActive = true;
+      storyRepelFreezeEnd = now + STORY_REPEL_FREEZE_MS;
+      storyRepelCooldownEnd = storyRepelFreezeEnd + STORY_REPEL_COOLDOWN_MS;
+      storyRepelFlash = 30;
+      // Fling banana to farthest cell from player
+      let bestD = -1, bc2 = 0, br2 = 0;
+      if (storyMaze) {
+        for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++) {
+          if (storyMaze[r][c]===0) {
+            const d = Math.abs(c - Math.floor(sp.x)) + Math.abs(r - Math.floor(sp.y));
+            if (d > bestD) { bestD=d; bc2=c; br2=r; }
+          }
+        }
+      }
+      sb.x = bc2 + 0.5; sb.y = br2 + 0.5;
+    }
+  }
+}
+function storyKeyUp(e) { sKeys[e.key] = false; }
+
+function initStory() {
+  // Reuse maze generator
+  storyMaze = generateMaze(COLS, ROWS);
+  // Player at (1.5, 1.5) cell-space
+  sp.x = 1.5; sp.y = 1.5; sp.angle = 0;
+  // Banana starts far from player
+  let bestD = -1, bc2 = 1, br2 = 1;
+  for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++) {
+    if (storyMaze[r][c]===0) {
+      const d = Math.abs(c-1)+Math.abs(r-1);
+      if (d > bestD) { bestD=d; bc2=c; br2=r; }
+    }
+  }
+  sb.x = bc2 + 0.5; sb.y = br2 + 0.5;
+  // Exit: second farthest open cell from banana
+  let sorted = [];
+  for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++) {
+    if (storyMaze[r][c]===0 && !(c===1&&r===1) && !(Math.abs(c-bc2)<2&&Math.abs(r-br2)<2)) {
+      sorted.push({c,r,d:Math.abs(c-1)+Math.abs(r-1)});
+    }
+  }
+  sorted.sort((a,b)=>b.d-a.d);
+  storyExit = sorted[2] || sorted[0] || {c:COLS-2, r:ROWS-2};
+  sbMoveTimer = 0;
+  storyGameOver = false;
+  storyWon = false;
+  storyRepelActive = false;
+  storyRepelFreezeEnd = 0;
+  storyRepelCooldownEnd = 0;
+  storyRepelFlash = 0;
+}
+
+// BFS for story mode
+function storyBFS(fc, fr, tc, tr) {
+  if (!storyMaze) return [];
+  if (fc===tc&&fr===tr) return [];
+  const visited = Array.from({length:ROWS},()=>Array(COLS).fill(false));
+  const prev = Array.from({length:ROWS},()=>Array(COLS).fill(null));
+  visited[fr][fc] = true;
+  const q = [{c:fc,r:fr}];
+  const dirs = [[0,-1],[0,1],[-1,0],[1,0]];
+  while (q.length) {
+    const cur = q.shift();
+    if (cur.c===tc&&cur.r===tr) {
+      const path = [];
+      let node = {c:tc,r:tr};
+      while (node) { path.unshift(node); node = prev[node.r][node.c]; }
+      return path;
+    }
+    for (const [dc,dr] of dirs) {
+      const nc=cur.c+dc, nr=cur.r+dr;
+      if (nc>=0&&nc<COLS&&nr>=0&&nr<ROWS&&!visited[nr][nc]&&storyMaze[nr][nc]===0) {
+        visited[nr][nc]=true; prev[nr][nc]=cur; q.push({c:nc,r:nr});
+      }
+    }
+  }
+  return [];
+}
+
+function storyLoop(now) {
+  if (!storyActive || !storyMaze) return;
+  if (!storyGameOver && !storyWon) {
+    updateStory();
+    drawStory(now);
+  }
+  storyAnimFrame = requestAnimationFrame(storyLoop);
+}
+
+function updateStory() {
+  if (!storyMaze) return;
+  const MOVE_SPEED = 0.07;
+  const TURN_SPEED = 0.05;
+
+  // Turn
+  if (sKeys['ArrowLeft']||sKeys['a']||sKeys['A']) sp.angle -= TURN_SPEED;
+  if (sKeys['ArrowRight']||sKeys['d']||sKeys['D']) sp.angle += TURN_SPEED;
+
+  // Move
+  let dx = 0, dy = 0;
+  if (sKeys['ArrowUp']||sKeys['w']||sKeys['W']) { dx += Math.cos(sp.angle)*MOVE_SPEED; dy += Math.sin(sp.angle)*MOVE_SPEED; }
+  if (sKeys['ArrowDown']||sKeys['s']||sKeys['S']) { dx -= Math.cos(sp.angle)*MOVE_SPEED; dy -= Math.sin(sp.angle)*MOVE_SPEED; }
+
+  // Collision — safe helper
+  const storyWalkable = (cx, cy) => {
+    const col = Math.floor(cx), row = Math.floor(cy);
+    if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return false;
+    return storyMaze[row][col] !== 1;
+  };
+  const nx = sp.x + dx, ny = sp.y + dy;
+  const margin = 0.25;
+  if (storyWalkable(nx + (dx >= 0 ? margin : -margin), sp.y)) sp.x = nx;
+  if (storyWalkable(sp.x, ny + (dy >= 0 ? margin : -margin))) sp.y = ny;
+
+  // Update repel state
+  const nowMs = performance.now();
+  if (storyRepelActive && nowMs >= storyRepelFreezeEnd) storyRepelActive = false;
+  if (storyRepelFlash > 0) storyRepelFlash--;
+
+  // Banana chases player (BFS step every SB_SPEED frames) — frozen during repel
+  sbMoveTimer++;
+  if (sbMoveTimer >= SB_SPEED && !storyRepelActive) {
+    sbMoveTimer = 0;
+    const fc = Math.floor(sb.x), fr = Math.floor(sb.y);
+    const tc = Math.floor(sp.x), tr = Math.floor(sp.y);
+    const path = storyBFS(fc, fr, tc, tr);
+    if (path.length > 1) {
+      sb.x = path[1].c + 0.5;
+      sb.y = path[1].r + 0.5;
+    }
+  }
+
+  // Win: player reaches exit
+  if (Math.abs(sp.x - (storyExit.c+0.5)) < 0.7 && Math.abs(sp.y - (storyExit.r+0.5)) < 0.7) {
+    storyWon = true;
+    const sw = document.getElementById('story-win');
+    if (sw) sw.style.display = 'flex';
+    return;
+  }
+
+  // Death: banana catches player
+  const distToBanana = Math.hypot(sp.x - sb.x, sp.y - sb.y);
+  if (distToBanana < 0.7) {
+    storyGameOver = true;
+    const sd = document.getElementById('story-dead');
+    if (sd) sd.style.display = 'flex';
+    if (soundEnabled) playJumpscareSound();
+    return;
+  }
+
+  // Status
+  const nowMs2 = performance.now();
+  const st = document.getElementById('story-status');
+  if (st) {
+    const d = Math.hypot(sp.x-sb.x, sp.y-sb.y).toFixed(1);
+    let repelLabel = '';
+    if (storyRepelActive) {
+      const rem = ((storyRepelFreezeEnd - nowMs2)/1000).toFixed(1);
+      repelLabel = ` | 🛡 FROZEN ${rem}s`;
+    } else if (nowMs2 < storyRepelCooldownEnd) {
+      const rem = ((storyRepelCooldownEnd - nowMs2)/1000).toFixed(1);
+      repelLabel = ` | E: ${rem}s`;
+    } else {
+      repelLabel = ` | E: REPEL`;
+    }
+    st.textContent = `🍌 ${d} cells${repelLabel}`;
+    st.style.color = d < 3 ? '#f00' : d < 6 ? '#f80' : '#ff0';
+  }
+}
+
+function drawStory(now) {
+  const FOV = Math.PI / 3; // 60°
+  const NUM_RAYS = SW;
+  const HALF_H = SH / 2;
+
+  // Sky / floor
+  sCtx.fillStyle = '#0a0a14';
+  sCtx.fillRect(0, 0, SW, HALF_H);
+  sCtx.fillStyle = '#111108';
+  sCtx.fillRect(0, HALF_H, SW, HALF_H);
+
+  // Depth buffer for sprite sorting
+  const zBuf = new Float32Array(NUM_RAYS);
+
+  // Cast rays
+  for (let i = 0; i < NUM_RAYS; i++) {
+    const rayAngle = sp.angle - FOV/2 + (i/NUM_RAYS)*FOV;
+    const cos = Math.cos(rayAngle), sin = Math.sin(rayAngle);
+
+    let dist = 0;
+    let hit = false;
+    const step = 0.02;
+    let rx = sp.x, ry = sp.y;
+    while (dist < 30 && !hit) {
+      dist += step;
+      rx = sp.x + cos*dist;
+      ry = sp.y + sin*dist;
+      const rc = Math.floor(rx), rr = Math.floor(ry);
+      if (rc < 0 || rc >= COLS || rr < 0 || rr >= ROWS) { hit=true; break; }
+      if (storyMaze[rr][rc] === 1) hit=true;
+    }
+
+    // Fix fisheye
+    const corrDist = dist * Math.cos(rayAngle - sp.angle);
+    zBuf[i] = corrDist;
+
+    const wallH = Math.min(SH, SH / (corrDist + 0.0001));
+    const wallTop = HALF_H - wallH/2;
+
+    // Wall shading by distance
+    const shade = Math.max(0, Math.min(1, 1 - corrDist/16));
+    const r = Math.floor(30 * shade);
+    const g = Math.floor(60 * shade);
+    const b = Math.floor(160 * shade);
+    sCtx.fillStyle = `rgb(${r},${g},${b})`;
+    sCtx.fillRect(i, wallTop, 1, wallH);
+  }
+
+  // Draw exit door as a billboard
+  drawStorySprite(sCtx, storyExit.c+0.5, storyExit.r+0.5, '🚪', 0.9, zBuf, FOV, now);
+
+  // Draw banana enemy as a billboard
+  drawStorySprite(sCtx, sb.x, sb.y, '🍌', 1.4, zBuf, FOV, now);
+
+  // Minimap (bottom-left, small)
+  drawStoryMinimap();
+
+  // Repel flash
+  if (storyRepelFlash > 0) {
+    const a = (storyRepelFlash / 30) * 0.4;
+    sCtx.strokeStyle = `rgba(255,160,0,${a})`;
+    sCtx.lineWidth = 12;
+    sCtx.strokeRect(0, 0, SW, SH);
+    storyRepelFlash--;
+  }
+
+  // Vignette
+  const vig = sCtx.createRadialGradient(SW/2, SH/2, SH*0.25, SW/2, SH/2, SH*0.75);
+  vig.addColorStop(0, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(0,0,0,0.55)');
+  sCtx.fillStyle = vig;
+  sCtx.fillRect(0, 0, SW, SH);
+
+  // Danger flash when banana is close
+  const dist2b = Math.hypot(sp.x-sb.x, sp.y-sb.y);
+  if (dist2b < 4) {
+    const alpha = (1 - dist2b/4) * 0.3 * (0.5 + 0.5*Math.sin(now/80));
+    sCtx.fillStyle = `rgba(255,0,0,${alpha})`;
+    sCtx.fillRect(0, 0, SW, SH);
+  }
+}
+
+function drawStorySprite(ctx, wx, wy, emoji, scale, zBuf, FOV, now) {
+  // Transform sprite position relative to player
+  const dx = wx - sp.x, dy = wy - sp.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist < 0.3) return;
+
+  // Angle to sprite
+  let spriteAngle = Math.atan2(dy, dx) - sp.angle;
+  // Normalize
+  while (spriteAngle < -Math.PI) spriteAngle += Math.PI*2;
+  while (spriteAngle > Math.PI) spriteAngle -= Math.PI*2;
+
+  // Check if in FOV
+  if (Math.abs(spriteAngle) > FOV/2 + 0.2) return;
+
+  const screenX = (SW/2) + (spriteAngle / (FOV/2)) * (SW/2);
+  const corrDist = dist * Math.cos(spriteAngle);
+  const spriteH = Math.min(SH * 1.5, (SH / corrDist) * scale);
+  const spriteW = spriteH;
+
+  const drawX = screenX - spriteW/2;
+  const drawY = SH/2 - spriteH/2;
+
+  // Depth check — only draw columns not occluded by walls
+  const startCol = Math.floor(drawX);
+  const endCol = Math.floor(drawX + spriteW);
+  let visible = false;
+  for (let col = Math.max(0,startCol); col < Math.min(SW,endCol); col++) {
+    if (corrDist < zBuf[col]) { visible = true; break; }
+  }
+  if (!visible) return;
+
+  // Draw emoji scaled by distance
+  const fontSize = Math.max(8, Math.floor(spriteH * 0.75));
+  ctx.save();
+  ctx.font = `${fontSize}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  // Slight wobble for banana
+  const wobble = emoji === '🍌' ? Math.sin(now/200) * 4 : 0;
+  ctx.globalAlpha = Math.min(1, Math.max(0.1, 1 - corrDist/20));
+  ctx.fillText(emoji, screenX, SH/2 + wobble);
+  ctx.restore();
+}
+
+function drawStoryMinimap() {
+  if (!storyMaze) return;
+  const MS = 4; // cell size on minimap
+  const MX = 8, MY = SH - ROWS*MS - 8;
+  sCtx.save();
+  sCtx.globalAlpha = 0.55;
+  for (let r=0;r<ROWS;r++) for (let c=0;c<COLS;c++) {
+    sCtx.fillStyle = storyMaze[r][c]===1 ? '#226' : '#001';
+    sCtx.fillRect(MX+c*MS, MY+r*MS, MS, MS);
+  }
+  // Exit
+  sCtx.fillStyle = '#0f0';
+  sCtx.fillRect(MX+storyExit.c*MS+1, MY+storyExit.r*MS+1, MS-2, MS-2);
+  // Banana
+  sCtx.fillStyle = '#ff0';
+  sCtx.fillRect(MX+Math.floor(sb.x)*MS+1, MY+Math.floor(sb.y)*MS+1, MS-2, MS-2);
+  // Player
+  sCtx.fillStyle = '#fff';
+  sCtx.fillRect(MX+Math.floor(sp.x)*MS+1, MY+Math.floor(sp.y)*MS+1, MS-2, MS-2);
+  sCtx.restore();
+}
 </script>
 </body>
 </html>
