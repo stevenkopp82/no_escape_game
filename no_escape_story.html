@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NO ESCAPE: STORY EDITION</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000; color:#fff; font-family:'Courier New',monospace; overflow:hidden; }
+
+#title-screen {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:#000; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:28px; z-index:100;
+}
+#game-screen {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  display:none; align-items:center; justify-content:center;
+  background:#000; flex-direction:column;
+}
+
+canvas { display:block; image-rendering:pixelated; }
+
+/* Tutorial subtitle box */
+#tutorial-box {
+  position:fixed; bottom:60px; left:50%; transform:translateX(-50%);
+  background:rgba(0,0,0,0.85); border:1px solid #444;
+  padding:12px 28px; font-size:13px; letter-spacing:2px;
+  color:#ccc; text-align:center; max-width:520px;
+  display:none; z-index:50; pointer-events:none;
+  border-radius:2px;
+}
+#tutorial-speaker {
+  font-size:10px; letter-spacing:4px; color:#888; margin-bottom:6px;
+}
+#tutorial-text { line-height:1.6; }
+#tutorial-continue {
+  font-size:10px; color:#555; margin-top:6px; animation: tblink 1s infinite;
+}
+@keyframes tblink { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes shake {
+  0%,100%{transform:translate(0,0)}
+  20%{transform:translate(-6px,3px)}
+  40%{transform:translate(6px,-3px)}
+  60%{transform:translate(-4px,5px)}
+  80%{transform:translate(4px,-2px)}
+}
+
+/* HUD */
+#hud {
+  position:fixed; top:10px; left:0; right:0;
+  display:none; justify-content:center; gap:40px;
+  font-size:13px; letter-spacing:3px; pointer-events:none;
+  z-index:40;
+}
+#hud-chapter { color:#888; }
+#hud-objective { color:#aaf; }
+
+/* Crosshair */
+#crosshair {
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  color:rgba(255,255,255,0.4); font-size:16px; pointer-events:none;
+  display:none; z-index:40;
+}
+
+/* Fade overlay */
+#fade {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:#000; opacity:1; z-index:90; pointer-events:none;
+  transition:opacity 1.2s ease;
+}
+
+/* Title elements */
+#title-logo {
+  font-size:58px; font-weight:bold; letter-spacing:12px;
+  color:#f00; text-shadow:0 0 40px #f00, 0 0 80px #900;
+  animation:flicker 0.15s infinite;
+}
+#title-sub {
+  font-size:16px; letter-spacing:8px; color:#888;
+  text-shadow:0 0 10px #444;
+}
+#title-edition {
+  font-size:22px; letter-spacing:6px; color:#4af;
+  text-shadow:0 0 20px #4af;
+}
+@keyframes flicker {
+  0%,100%{opacity:1} 92%{opacity:1} 93%{opacity:0.85} 95%{opacity:1} 97%{opacity:0.9}
+}
+
+.title-btn {
+  background:#000; border:2px solid #fff; color:#fff;
+  padding:14px 48px; font-size:16px; letter-spacing:5px;
+  cursor:pointer; font-family:'Courier New',monospace;
+  transition:all 0.2s;
+}
+.title-btn:hover { background:#fff; color:#000; }
+.title-btn.secondary {
+  border-color:#555; color:#555; font-size:12px;
+  padding:8px 24px; letter-spacing:3px;
+}
+.title-btn.secondary:hover { background:#555; color:#000; }
+
+/* Chapter title card */
+#chapter-card {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:#000; display:none; flex-direction:column;
+  align-items:center; justify-content:center; gap:16px;
+  z-index:80;
+}
+#chapter-number { font-size:13px; letter-spacing:8px; color:#555; }
+#chapter-name   { font-size:42px; font-weight:bold; letter-spacing:6px; color:#fff; text-shadow:0 0 20px #fff; }
+#chapter-flavor { font-size:13px; letter-spacing:3px; color:#666; }
+</style>
+</head>
+<body>
+
+<!-- Fade overlay -->
+<div id="fade"></div>
+
+<!-- Title Screen -->
+<div id="title-screen">
+  <div id="title-logo">NO ESCAPE</div>
+  <div id="title-edition">STORY EDITION</div>
+  <div id="title-sub">TUTORIAL: THE VENTS</div>
+  <div style="height:10px;"></div>
+  <button class="title-btn" onclick="startGame()">BEGIN</button>
+  <button class="title-btn secondary" onclick="showControls()">CONTROLS</button>
+  <div id="controls-popup" style="display:none; color:#888; font-size:12px; letter-spacing:2px; text-align:center; line-height:2;">
+    <div><span style="color:#f80;">W / ↑</span> — move forward &nbsp;&nbsp; <span style="color:#f80;">S / ↓</span> — move back</div>
+    <div><span style="color:#f80;">A / ←</span> — turn left &nbsp;&nbsp;&nbsp;&nbsp; <span style="color:#f80;">D / →</span> — turn right</div>
+    <div><span style="color:#f80;">SPACE / E</span> — interact / continue</div>
+    <div style="margin-top:6px; color:#555;">no combat. just survive.</div>
+  </div>
+</div>
+
+<!-- Chapter Card -->
+<div id="chapter-card">
+  <div id="chapter-number">TUTORIAL</div>
+  <div id="chapter-name">THE VENTS</div>
+  <div id="chapter-flavor">something is already inside</div>
+</div>
+
+<!-- Game Screen -->
+<div id="game-screen">
+  <canvas id="gameCanvas"></canvas>
+  <div id="hud">
+    <span id="hud-chapter">TUTORIAL — THE VENTS</span>
+    <span id="hud-objective">find the exit</span>
+  </div>
+  <div id="crosshair">+</div>
+  <div id="tutorial-box">
+    <div id="tutorial-speaker">SYSTEM</div>
+    <div id="tutorial-text"></div>
+    <div id="tutorial-continue">[ SPACE / E to continue ]</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════
+// CANVAS SETUP
+// ═══════════════════════════════════
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const SW = 640, SH = 480;
+canvas.width = SW; canvas.height = SH;
+
+// Scale canvas to fill screen
+function resizeCanvas() {
+  const scaleX = window.innerWidth / SW;
+  const scaleY = window.innerHeight / SH;
+  const scale = Math.min(scaleX, scaleY);
+  canvas.style.width = (SW * scale) + 'px';
+  canvas.style.height = (SH * scale) + 'px';
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// ═══════════════════════════════════
+// HAND-CRAFTED VENT MAP
+// 0 = walkable, 1 = wall
+// 21 wide × 11 tall
+// Winding vent corridors, 1-cell wide
+// ═══════════════════════════════════
+const VCOLS = 21, VROWS = 11;
+const VENT_MAP = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+  [1,0,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,0,1],
+  [1,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+  [1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,0,1,0,1,1,1],
+  [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1],
+  [1,1,1,0,1,0,1,0,1,1,1,0,1,0,1,1,1,1,1,0,1],
+  [1,0,0,0,1,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
+  [1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,0,1,1,1,1,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+];
+
+// Spawn at top-left opening
+const SPAWN = { x: 1.5, y: 1.5, angle: 0 };
+// Exit at bottom-right
+const EXIT_C = 19, EXIT_R = 9;
+
+// ═══════════════════════════════════
+// TUTORIAL SCRIPT
+// ═══════════════════════════════════
+const TUTORIAL_STEPS = [
+  {
+    speaker: 'SYSTEM',
+    text: 'Wake up. You\'re in the vents.',
+    trigger: 'start',
+    objectiveAfter: 'find the exit'
+  },
+  {
+    speaker: 'YOU',
+    text: 'Where am I... these walls are metal. Tight. Cold.',
+    trigger: 'start'
+  },
+  {
+    speaker: 'SYSTEM',
+    text: 'Use W/S to move. A/D to turn. Find the exit grate.',
+    trigger: 'start'
+  },
+  {
+    speaker: '???',
+    text: '...',
+    trigger: 'moved_10',
+    objectiveAfter: 'keep moving'
+  },
+  {
+    speaker: 'YOU',
+    text: 'Something... crawled past. I heard it.',
+    trigger: 'moved_10'
+  },
+  {
+    speaker: 'SYSTEM',
+    text: 'The exit is somewhere ahead. Don\'t stop.',
+    trigger: 'moved_20'
+  },
+  {
+    speaker: '???',
+    text: 'i am hunger',
+    trigger: 'near_enemy',
+    objectiveAfter: '⚠ GET TO THE EXIT'
+  },
+];
+
+let tutorialQueue = [];
+let tutorialShowing = false;
+let tutorialStep = null;
+let tutorialDismissed = new Set();
+
+// ═══════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════
+let gameRunning = false;
+let gameWon = false;
+let gameDead = false;
+
+let player = { x: SPAWN.x, y: SPAWN.y, angle: SPAWN.angle };
+let enemy  = { x: 0, y: 0 }; // the thing in the vents
+let enemyMoveTimer = 0;
+let ENEMY_SPEED_CURRENT = 80; // frames per step — speeds up on trigger
+let enemyActive = false; // starts inactive until trigger
+
+let stepCount = 0;
+let moved10Fired = false;
+let moved20Fired = false;
+let nearEnemyFired = false;
+
+let animFrameId = null;
+const keys = {};
+
+// ═══════════════════════════════════
+// RAYCASTER CONSTANTS
+// ═══════════════════════════════════
+const FOV = Math.PI / 3;
+const NUM_RAYS = SW;
+const HALF_H = SH / 2;
+const MOVE_SPEED = 0.06;
+const TURN_SPEED = 0.045;
+
+// ═══════════════════════════════════
+// TITLE / MENU
+// ═══════════════════════════════════
+function showControls() {
+  const p = document.getElementById('controls-popup');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+
+function startGame() {
+  // Fade out title
+  const title = document.getElementById('title-screen');
+  const fade = document.getElementById('fade');
+  fade.style.opacity = '1';
+  setTimeout(() => {
+    title.style.display = 'none';
+    showChapterCard();
+  }, 400);
+}
+
+function showChapterCard() {
+  const card = document.getElementById('chapter-card');
+  const fade = document.getElementById('fade');
+  card.style.display = 'flex';
+  fade.style.transition = 'opacity 1s ease';
+  fade.style.opacity = '0';
+
+  setTimeout(() => {
+    fade.style.opacity = '1';
+    setTimeout(() => {
+      card.style.display = 'none';
+      launchGame();
+    }, 600);
+  }, 2800);
+}
+
+function launchGame() {
+  const game = document.getElementById('game-screen');
+  const hud  = document.getElementById('hud');
+  const cross= document.getElementById('crosshair');
+  const fade = document.getElementById('fade');
+
+  game.style.display = 'flex';
+  hud.style.display = 'flex';
+  cross.style.display = 'block';
+
+  // Reset state
+  player = { x: SPAWN.x, y: SPAWN.y, angle: SPAWN.angle };
+  stepCount = 0; moved10Fired = false; moved20Fired = false; nearEnemyFired = false;
+  gameWon = false; gameDead = false; enemyActive = false; ENEMY_SPEED_CURRENT = 80;
+  tutorialQueue = []; tutorialShowing = false;
+  tutorialDismissed.clear();
+
+  // Place enemy at top-left corner, far from the exit
+  enemy.x = 1.5; enemy.y = 9.5;
+
+  // Wire keys
+  document.addEventListener('keydown', onKeyDown);
+  document.addEventListener('keyup', onKeyUp);
+
+  // Fade in
+  fade.style.transition = 'opacity 1.2s ease';
+  fade.style.opacity = '0';
+
+  gameRunning = true;
+  animFrameId = requestAnimationFrame(gameLoop);
+
+  // Fire opening tutorial after short delay
+  setTimeout(() => {
+    queueTutorial('start');
+  }, 800);
+}
+
+// ═══════════════════════════════════
+// INPUT
+// ═══════════════════════════════════
+function onKeyDown(e) {
+  keys[e.key] = true;
+  if ((e.key === ' ' || e.key === 'e' || e.key === 'E') && tutorialShowing) {
+    dismissTutorial();
+  }
+  e.preventDefault();
+}
+function onKeyUp(e) { keys[e.key] = false; }
+
+// ═══════════════════════════════════
+// TUTORIAL SYSTEM
+// ═══════════════════════════════════
+function queueTutorial(trigger) {
+  if (tutorialDismissed.has(trigger)) return;
+  tutorialDismissed.add(trigger);
+  const steps = TUTORIAL_STEPS.filter(s => s.trigger === trigger);
+  steps.forEach(s => tutorialQueue.push(s));
+  if (!tutorialShowing) showNextTutorial();
+}
+
+function showNextTutorial() {
+  if (tutorialQueue.length === 0) {
+    tutorialShowing = false;
+    document.getElementById('tutorial-box').style.display = 'none';
+    return;
+  }
+  tutorialShowing = true;
+  tutorialStep = tutorialQueue.shift();
+  const box = document.getElementById('tutorial-box');
+  const sp  = document.getElementById('tutorial-speaker');
+  const txt = document.getElementById('tutorial-text');
+  sp.textContent = tutorialStep.speaker;
+  sp.style.color = tutorialStep.speaker === '???' ? '#f44' :
+                   tutorialStep.speaker === 'YOU'  ? '#4af' :
+                   tutorialStep.speaker === 'SYSTEM' ? '#888' : '#888';
+  txt.textContent = tutorialStep.text;
+  box.style.display = 'block';
+}
+
+function dismissTutorial() {
+  if (!tutorialShowing) return;
+  if (tutorialStep && tutorialStep.objectiveAfter) {
+    document.getElementById('hud-objective').textContent = tutorialStep.objectiveAfter;
+  }
+  showNextTutorial();
+}
+
+// ═══════════════════════════════════
+// WALKABLE CHECK
+// ═══════════════════════════════════
+function walkable(cx, cy) {
+  const col = Math.floor(cx), row = Math.floor(cy);
+  if (col < 0 || col >= VCOLS || row < 0 || row >= VROWS) return false;
+  return VENT_MAP[row][col] === 0;
+}
+
+// ═══════════════════════════════════
+// BFS FOR ENEMY
+// ═══════════════════════════════════
+function ventBFS(fc, fr, tc, tr) {
+  fc = Math.max(0,Math.min(VCOLS-1,fc));
+  fr = Math.max(0,Math.min(VROWS-1,fr));
+  tc = Math.max(0,Math.min(VCOLS-1,tc));
+  tr = Math.max(0,Math.min(VROWS-1,tr));
+  if (fc===tc&&fr===tr) return [];
+  const visited = Array.from({length:VROWS},()=>new Array(VCOLS).fill(false));
+  const prev = Array.from({length:VROWS},()=>new Array(VCOLS).fill(null));
+  visited[fr][fc] = true;
+  const q = [{c:fc,r:fr}];
+  const dirs = [[0,-1],[0,1],[-1,0],[1,0]];
+  while (q.length) {
+    const cur = q.shift();
+    if (cur.c===tc&&cur.r===tr) {
+      const path = [];
+      let node = {c:tc,r:tr};
+      while (node) { path.unshift(node); node = prev[node.r][node.c]; }
+      return path;
+    }
+    for (const [dc,dr] of dirs) {
+      const nc=cur.c+dc,nr=cur.r+dr;
+      if (nc>=0&&nc<VCOLS&&nr>=0&&nr<VROWS&&!visited[nr][nc]&&VENT_MAP[nr][nc]===0) {
+        visited[nr][nc]=true; prev[nr][nc]=cur; q.push({c:nc,r:nr});
+      }
+    }
+  }
+  return [];
+}
+
+// ═══════════════════════════════════
+// GAME LOOP
+// ═══════════════════════════════════
+function gameLoop(now) {
+  if (!gameRunning) return;
+  update(now);
+  draw(now);
+  animFrameId = requestAnimationFrame(gameLoop);
+}
+
+function update(now) {
+  if (gameWon || gameDead) return;
+  if (tutorialShowing) return; // freeze player during dialogue
+
+  // Turn
+  if (keys['ArrowLeft']||keys['a']||keys['A']) player.angle -= TURN_SPEED;
+  if (keys['ArrowRight']||keys['d']||keys['D']) player.angle += TURN_SPEED;
+
+  // Move
+  let moved = false;
+  let dx = 0, dy = 0;
+  if (keys['ArrowUp']||keys['w']||keys['W'])   { dx += Math.cos(player.angle)*MOVE_SPEED; dy += Math.sin(player.angle)*MOVE_SPEED; moved=true; }
+  if (keys['ArrowDown']||keys['s']||keys['S'])  { dx -= Math.cos(player.angle)*MOVE_SPEED; dy -= Math.sin(player.angle)*MOVE_SPEED; moved=true; }
+
+  const margin = 0.22;
+  const nx = player.x + dx, ny = player.y + dy;
+  if (walkable(nx + (dx>=0?margin:-margin), player.y)) player.x = nx;
+  if (walkable(player.x, ny + (dy>=0?margin:-margin))) player.y = ny;
+
+  player.x = Math.max(0.5, Math.min(VCOLS-0.5, player.x));
+  player.y = Math.max(0.5, Math.min(VROWS-0.5, player.y));
+
+  if (moved) stepCount++;
+
+  // Tutorial triggers
+  if (!moved10Fired && stepCount >= 10) { moved10Fired=true; queueTutorial('moved_10'); }
+  if (!moved20Fired && stepCount >= 20) { moved20Fired=true; queueTutorial('moved_20'); }
+
+  // Enemy AI
+  if (enemyActive) {
+    enemyMoveTimer++;
+    if (enemyMoveTimer >= ENEMY_SPEED_CURRENT) {
+      enemyMoveTimer = 0;
+      const fc = Math.max(0,Math.min(VCOLS-1,Math.floor(enemy.x)));
+      const fr = Math.max(0,Math.min(VROWS-1,Math.floor(enemy.y)));
+      const tc = Math.max(0,Math.min(VCOLS-1,Math.floor(player.x)));
+      const tr = Math.max(0,Math.min(VROWS-1,Math.floor(player.y)));
+      const path = ventBFS(fc,fr,tc,tr);
+      if (path.length > 1) { enemy.x = path[1].c+0.5; enemy.y = path[1].r+0.5; }
+    }
+
+    const distToEnemy = Math.hypot(player.x-enemy.x, player.y-enemy.y);
+
+    // Near enemy tutorial trigger
+    if (!nearEnemyFired && distToEnemy < 5) {
+      nearEnemyFired = true;
+      enemyMoveTimer = 0; // reset so it doesn't immediately step again
+      ENEMY_SPEED_CURRENT = 40; // speed up
+      queueTutorial('near_enemy');
+    }
+
+    // Death
+    if (distToEnemy < 0.7) {
+      gameDead = true;
+      triggerDeath();
+      return;
+    }
+  } else {
+    // Activate enemy when player is halfway through
+    if (stepCount >= 15) {
+      enemyActive = true;
+      enemyMoveTimer = 0;
+    }
+  }
+
+  // Win: reach exit
+  if (Math.abs(player.x-(EXIT_C+0.5))<0.8 && Math.abs(player.y-(EXIT_R+0.5))<0.8) {
+    gameWon = true;
+    triggerWin();
+  }
+}
+
+function triggerDeath() {
+  playSound('death');
+  fadeOut(() => {
+    showDeadScreen();
+  }, 600);
+}
+
+function triggerWin() {
+  playSound('win');
+  fadeOut(() => {
+    showWinScreen();
+  }, 1000);
+}
+
+function fadeOut(cb, duration) {
+  const fade = document.getElementById('fade');
+  fade.style.transition = `opacity ${duration/1000}s ease`;
+  fade.style.opacity = '1';
+  setTimeout(cb, duration + 100);
+}
+
+function showDeadScreen() {
+  gameRunning = false;
+  const game = document.getElementById('game-screen');
+  game.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:24px;">
+      <div style="font-size:72px;">💀</div>
+      <div style="font-size:36px;font-weight:bold;letter-spacing:10px;color:#f00;text-shadow:0 0 30px #f00;">IT FOUND YOU</div>
+      <div style="font-size:12px;letter-spacing:4px;color:#555;">the vents are not safe</div>
+      <button onclick="location.reload()" style="background:#000;border:2px solid #f00;color:#f00;padding:12px 36px;font-size:14px;letter-spacing:4px;cursor:pointer;font-family:'Courier New',monospace;margin-top:10px;">TRY AGAIN</button>
+    </div>`;
+  game.style.display = 'flex';
+  const fade = document.getElementById('fade');
+  fade.style.transition = 'opacity 1.2s ease';
+  fade.style.opacity = '0';
+}
+
+function showWinScreen() {
+  gameRunning = false;
+  document.removeEventListener('keydown', onKeyDown);
+  document.removeEventListener('keyup', onKeyUp);
+
+  // Show "vents break" cutscene text, then chapter card, then chapter 1
+  const game = document.getElementById('game-screen');
+  const fade = document.getElementById('fade');
+
+  // Cutscene lines
+  const lines = [
+    { speaker:'YOU',    text:'I made it through... wait—' },
+    { speaker:'SYSTEM', text:'STRUCTURAL INTEGRITY FAILURE' },
+    { speaker:'YOU',    text:'The floor— the vent is giving way—' },
+    { speaker:'SYSTEM', text:'...' },
+  ];
+
+  let lineIdx = 0;
+  const box = document.getElementById('tutorial-box');
+  const spEl = document.getElementById('tutorial-speaker');
+  const txtEl = document.getElementById('tutorial-text');
+  const cont = document.getElementById('tutorial-continue');
+  cont.textContent = '[ SPACE / E to continue ]';
+  box.style.display = 'block';
+
+  // Advance on keypress
+  function cutsceneKey(e) {
+    if (e.key === ' ' || e.key === 'e' || e.key === 'E') {
+      e.preventDefault();
+      lineIdx++;
+      if (lineIdx > lines.length) return;
+      if (lineIdx === lines.length) {
+        document.removeEventListener('keydown', cutsceneKey);
+        box.style.display = 'none';
+        game.style.animation = 'shake 0.5s';
+        setTimeout(() => {
+          fadeOut(() => { showChapter1Card(); }, 800);
+        }, 500);
+        return;
+      }
+      const l = lines[lineIdx];
+      spEl.textContent = l.speaker;
+      spEl.style.color = l.speaker === 'YOU' ? '#4af' : '#f55';
+      txtEl.textContent = l.text;
+    } else {
+      e.preventDefault();
+    }
+  }
+  document.addEventListener('keydown', cutsceneKey);
+
+  // Show first line immediately
+  const l0 = lines[0];
+  spEl.textContent = l0.speaker;
+  spEl.style.color = l0.speaker === 'YOU' ? '#4af' : '#f55';
+  txtEl.textContent = l0.text;
+
+  fade.style.transition = 'opacity 0.5s ease';
+  fade.style.opacity = '0';
+}
+
+function showChapter1Card() {
+  const card = document.getElementById('chapter-card');
+  const fade = document.getElementById('fade');
+  document.getElementById('chapter-number').textContent = 'CHAPTER I';
+  document.getElementById('chapter-name').textContent = 'THE SAFE ZONE';
+  document.getElementById('chapter-flavor').textContent = 'it was never safe';
+  card.style.display = 'flex';
+  fade.style.transition = 'opacity 1s ease';
+  fade.style.opacity = '0';
+
+  setTimeout(() => {
+    fade.style.opacity = '1';
+    setTimeout(() => {
+      card.style.display = 'none';
+      launchChapter1();
+    }, 600);
+  }, 2800);
+}
+
+// ═══════════════════════════════════
+// RENDERER
+// ═══════════════════════════════════
+function draw(now) {
+  // Vent aesthetic: dark grey ceiling, darker floor
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(0, 0, SW, HALF_H);
+  ctx.fillStyle = '#111';
+  ctx.fillRect(0, HALF_H, SW, HALF_H);
+
+  // Subtle ceiling/floor gradient lines for vent feeling
+  for (let y = 0; y < HALF_H; y += 8) {
+    ctx.fillStyle = 'rgba(255,255,255,0.01)';
+    ctx.fillRect(0, y, SW, 1);
+    ctx.fillRect(0, SH - y, SW, 1);
+  }
+
+  const zBuf = new Float32Array(NUM_RAYS);
+
+  // Cast rays
+  for (let i = 0; i < NUM_RAYS; i++) {
+    const rayAngle = player.angle - FOV/2 + (i/NUM_RAYS)*FOV;
+    const cos = Math.cos(rayAngle), sin = Math.sin(rayAngle);
+    let dist = 0, hit = false;
+    let rx = player.x, ry = player.y;
+    while (dist < 30 && !hit) {
+      dist += 0.02;
+      rx = player.x + cos*dist;
+      ry = player.y + sin*dist;
+      const rc = Math.floor(rx), rr = Math.floor(ry);
+      if (rc<0||rc>=VCOLS||rr<0||rr>=VROWS) { hit=true; break; }
+      if (VENT_MAP[rr][rc] === 1) hit=true;
+    }
+    const corrDist = dist * Math.cos(rayAngle - player.angle);
+    zBuf[i] = corrDist;
+
+    const wallH = Math.min(SH, SH / (corrDist + 0.0001));
+    const wallTop = HALF_H - wallH/2;
+
+    // Vent wall: metallic grey, darker with distance
+    const shade = Math.max(0, Math.min(1, 1 - corrDist/12));
+    const v = Math.floor(55 + 80*shade);
+    // Slight green tint for industrial feel
+    ctx.fillStyle = `rgb(${Math.floor(v*0.85)},${v},${Math.floor(v*0.85)})`;
+    ctx.fillRect(i, wallTop, 1, wallH);
+
+    // Vent panel lines — horizontal seams every ~2 cells
+    const ventLine = (Math.floor(dist * 0.5) % 2 === 0);
+    if (ventLine && wallH > 4) {
+      ctx.fillStyle = `rgba(0,0,0,${0.18*shade})`;
+      ctx.fillRect(i, wallTop, 1, 2);
+      ctx.fillRect(i, wallTop + wallH - 2, 1, 2);
+    }
+  }
+
+  // Draw exit grate
+  drawSprite(ctx, EXIT_C+0.5, EXIT_R+0.5, '🟩', 1.2, zBuf, now, false);
+
+  // Draw enemy (the thing)
+  if (enemyActive) {
+    const distToEnemy = Math.hypot(player.x-enemy.x, player.y-enemy.y);
+    // Only show sprite when close enough
+    if (distToEnemy < 8) {
+      drawSprite(ctx, enemy.x, enemy.y, '🔴', 1.1, zBuf, now, true);
+    }
+  }
+
+  // Minimap
+  drawMinimap(now);
+
+  // Vignette
+  const vig = ctx.createRadialGradient(SW/2, SH/2, SH*0.2, SW/2, SH/2, SH*0.72);
+  vig.addColorStop(0, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(0,0,0,0.65)');
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, SW, SH);
+
+  // Danger flash
+  if (enemyActive) {
+    const d = Math.hypot(player.x-enemy.x, player.y-enemy.y);
+    if (d < 5) {
+      const alpha = (1 - d/5) * 0.35 * (0.5 + 0.5*Math.sin(now/60));
+      ctx.fillStyle = `rgba(255,0,0,${alpha})`;
+      ctx.fillRect(0, 0, SW, SH);
+    }
+  }
+
+  // Vent scan-line overlay
+  for (let y = 0; y < SH; y += 3) {
+    ctx.fillStyle = 'rgba(0,0,0,0.06)';
+    ctx.fillRect(0, y, SW, 1);
+  }
+}
+
+function drawSprite(ctx, wx, wy, emoji, scale, zBuf, now, wobble) {
+  const dx = wx - player.x, dy = wy - player.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist < 0.3) return;
+
+  let spriteAngle = Math.atan2(dy, dx) - player.angle;
+  while (spriteAngle < -Math.PI) spriteAngle += Math.PI*2;
+  while (spriteAngle > Math.PI) spriteAngle -= Math.PI*2;
+  if (Math.abs(spriteAngle) > FOV/2 + 0.2) return;
+
+  const screenX = (SW/2) + (spriteAngle / (FOV/2)) * (SW/2);
+  const corrDist = dist * Math.cos(spriteAngle);
+  const spriteH = Math.min(SH*1.5, (SH / corrDist) * scale);
+  const startCol = Math.floor(screenX - spriteH/2);
+  const endCol   = Math.floor(screenX + spriteH/2);
+  let visible = false;
+  for (let col = Math.max(0,startCol); col < Math.min(SW,endCol); col++) {
+    if (corrDist < zBuf[col]) { visible=true; break; }
+  }
+  if (!visible) return;
+
+  const fontSize = Math.max(8, Math.floor(spriteH * 0.75));
+  const wb = wobble ? Math.sin(now/180)*3 : 0;
+  ctx.save();
+  ctx.font = `${fontSize}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.globalAlpha = Math.min(1, Math.max(0.1, 1 - corrDist/18));
+  ctx.fillText(emoji, screenX, SH/2 + wb);
+  ctx.restore();
+}
+
+function drawMinimap(now) {
+  const MS = 6, MX = 8, MY = SH - VROWS*MS - 8;
+  ctx.save();
+  ctx.globalAlpha = 0.45;
+  for (let r=0;r<VROWS;r++) for (let c=0;c<VCOLS;c++) {
+    ctx.fillStyle = VENT_MAP[r][c]===1 ? '#334' : '#001';
+    ctx.fillRect(MX+c*MS, MY+r*MS, MS, MS);
+  }
+  // Exit
+  ctx.fillStyle = '#0f0';
+  ctx.fillRect(MX+EXIT_C*MS+1, MY+EXIT_R*MS+1, MS-2, MS-2);
+  // Enemy
+  if (enemyActive) {
+    ctx.fillStyle = '#f00';
+    ctx.fillRect(MX+Math.floor(enemy.x)*MS+1, MY+Math.floor(enemy.y)*MS+1, MS-2, MS-2);
+  }
+  // Player dot + direction line
+  ctx.fillStyle = '#fff';
+  const px = MX + player.x*MS, py = MY + player.y*MS;
+  ctx.fillRect(px-1, py-1, 3, 3);
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.6;
+  ctx.beginPath();
+  ctx.moveTo(px, py);
+  ctx.lineTo(px + Math.cos(player.angle)*6, py + Math.sin(player.angle)*6);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// ═══════════════════════════════════
+// AUDIO
+// ═══════════════════════════════════
+let audioCtx = null;
+function getACtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playSound(type) {
+  try {
+    const ac = getACtx();
+    const now = ac.currentTime;
+    if (type === 'death') {
+      const osc = ac.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(300, now);
+      osc.frequency.exponentialRampToValueAtTime(40, now+1.2);
+      const g = ac.createGain();
+      g.gain.setValueAtTime(0.5, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now+1.3);
+      osc.connect(g); g.connect(ac.destination);
+      osc.start(now); osc.stop(now+1.3);
+    } else if (type === 'win') {
+      [440,550,660].forEach((f,i) => {
+        const osc = ac.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f, now + i*0.15);
+        const g = ac.createGain();
+        g.gain.setValueAtTime(0.2, now+i*0.15);
+        g.gain.exponentialRampToValueAtTime(0.001, now+i*0.15+0.5);
+        osc.connect(g); g.connect(ac.destination);
+        osc.start(now+i*0.15); osc.stop(now+i*0.15+0.5);
+      });
+    }
+  } catch(e) {}
+}
+
+// Ambient vent hum
+function startAmbient() {
+  try {
+    const ac = getACtx();
+    const osc = ac.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(60, ac.currentTime);
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.04, ac.currentTime);
+    osc.connect(g); g.connect(ac.destination);
+    osc.start();
+    // never stop — ambient
+  } catch(e) {}
+}
+
+// Start ambient on first interaction
+document.addEventListener('keydown', () => { startAmbient(); }, { once: true });
+
+// ═══════════════════════════════════
+// CHAPTER 1 — THE SAFE ZONE (DAYCARE)
+// ═══════════════════════════════════
+// 23×13 open daycare floor plan
+// Pink walls, unicorn emojis, grey NPC humans, no enemy
+const C1COLS = 23, C1ROWS = 13;
+const C1_MAP = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+  [1,0,1,1,0,1,1,0,1,0,1,1,1,0,1,1,1,0,1,1,0,0,1],
+  [1,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+  [1,0,0,0,1,0,0,0,1,0,1,0,1,0,1,0,1,0,0,0,1,0,1],
+  [1,0,1,0,1,0,1,0,1,0,0,0,0,0,1,0,1,0,1,0,1,0,1],
+  [1,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,0,1,0,1,0,1,0,0,0,0,0,1,0,1,0,1,0,1,0,1],
+  [1,0,0,0,1,0,0,0,1,0,1,0,1,0,1,0,0,0,0,0,0,0,1],
+  [1,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+  [1,0,1,1,0,1,1,0,1,0,1,1,1,0,1,1,1,0,1,1,0,0,1],
+  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+];
+const C1_EXIT_C = 21, C1_EXIT_R = 11;
+const C1_SPAWN = { x:1.5, y:1.5, angle:0 };
+
+// NPC positions — scared humans crouched in corners
+const C1_NPCS = [
+  {x:3.5, y:3.5}, {x:7.5, y:2.5}, {x:11.5, y:6.5},
+  {x:15.5, y:3.5}, {x:19.5, y:2.5}, {x:5.5, y:9.5},
+  {x:17.5, y:9.5}, {x:9.5, y:10.5},
+];
+
+let c1Player = {x:C1_SPAWN.x, y:C1_SPAWN.y, angle:C1_SPAWN.angle};
+let c1GameRunning = false;
+let c1Won = false;
+let c1AnimFrame = null;
+let c1TutQueue = [];
+let c1TutShowing = false;
+let c1TutStep = null;
+let c1TutDone = new Set();
+let c1StepCount = 0;
+let c1Talked = false;
+
+const C1_TUTORIAL = [
+  { speaker:'YOU',    text:'I fell... I\'m alive. Where is this?', trigger:'start' },
+  { speaker:'YOU',    text:'A daycare? The walls are... pink. There are people here.', trigger:'start' },
+  { speaker:'SYSTEM', text:'Survivors found. No immediate threat detected. Find the exit.', trigger:'start', objectiveAfter:'find the exit' },
+  { speaker:'HUMAN',  text:'...please don\'t make us leave. it\'s safe here.', trigger:'near_npc', objectiveAfter:'reach the exit' },
+  { speaker:'YOU',    text:'I can\'t stay. I have to keep moving.', trigger:'near_npc' },
+];
+
+function launchChapter1() {
+  const game = document.getElementById('game-screen');
+  const hud  = document.getElementById('hud');
+  const fade = document.getElementById('fade');
+
+  // Swap canvas to chapter 1 renderer
+  game.style.display = 'flex';
+  document.getElementById('hud-chapter').textContent = 'CH.I — THE SAFE ZONE';
+  document.getElementById('hud-objective').textContent = '...';
+  hud.style.display = 'flex';
+  document.getElementById('crosshair').style.display = 'block';
+
+  c1Player = {x:C1_SPAWN.x, y:C1_SPAWN.y, angle:C1_SPAWN.angle};
+  c1GameRunning = true; c1Won = false;
+  c1TutQueue = []; c1TutShowing = false; c1TutDone.clear();
+  c1StepCount = 0; c1Talked = false;
+
+  // Re-wire keys to ch1 handler
+  document.removeEventListener('keydown', onKeyDown);
+  document.removeEventListener('keyup', onKeyUp);
+  document.addEventListener('keydown', c1KeyDown);
+  document.addEventListener('keyup', c1KeyUp);
+
+  fade.style.transition = 'opacity 1.2s ease';
+  fade.style.opacity = '0';
+
+  c1AnimFrame = requestAnimationFrame(c1Loop);
+
+  setTimeout(() => c1QueueTut('start'), 900);
+}
+
+const c1Keys = {};
+function c1KeyDown(e) {
+  c1Keys[e.key] = true;
+  if ((e.key===' '||e.key==='e'||e.key==='E') && c1TutShowing) c1DismissTut();
+  e.preventDefault();
+}
+function c1KeyUp(e) { c1Keys[e.key] = false; }
+
+function c1QueueTut(trigger) {
+  if (c1TutDone.has(trigger)) return;
+  c1TutDone.add(trigger);
+  C1_TUTORIAL.filter(s=>s.trigger===trigger).forEach(s=>c1TutQueue.push(s));
+  if (!c1TutShowing) c1ShowNextTut();
+}
+
+function c1ShowNextTut() {
+  if (c1TutQueue.length===0) {
+    c1TutShowing = false;
+    document.getElementById('tutorial-box').style.display = 'none';
+    return;
+  }
+  c1TutShowing = true;
+  c1TutStep = c1TutQueue.shift();
+  const box = document.getElementById('tutorial-box');
+  const sp  = document.getElementById('tutorial-speaker');
+  const txt = document.getElementById('tutorial-text');
+  sp.textContent = c1TutStep.speaker;
+  sp.style.color = c1TutStep.speaker==='YOU'?'#4af':
+                   c1TutStep.speaker==='HUMAN'?'#aaa':'#888';
+  txt.textContent = c1TutStep.text;
+  box.style.display = 'block';
+}
+
+function c1DismissTut() {
+  if (!c1TutShowing) return;
+  if (c1TutStep&&c1TutStep.objectiveAfter)
+    document.getElementById('hud-objective').textContent = c1TutStep.objectiveAfter;
+  c1ShowNextTut();
+}
+
+function c1Walkable(cx,cy) {
+  const col=Math.floor(cx), row=Math.floor(cy);
+  if(col<0||col>=C1COLS||row<0||row>=C1ROWS) return false;
+  return C1_MAP[row][col]===0;
+}
+
+function c1Loop(now) {
+  if (!c1GameRunning) return;
+  c1Update();
+  c1Draw(now);
+  c1AnimFrame = requestAnimationFrame(c1Loop);
+}
+
+function c1Update() {
+  if (c1Won) return;
+  if (c1TutShowing) return;
+
+  if (c1Keys['ArrowLeft']||c1Keys['a']||c1Keys['A']) c1Player.angle -= TURN_SPEED;
+  if (c1Keys['ArrowRight']||c1Keys['d']||c1Keys['D']) c1Player.angle += TURN_SPEED;
+
+  let moved=false, dx=0, dy=0;
+  if (c1Keys['ArrowUp']||c1Keys['w']||c1Keys['W'])  { dx+=Math.cos(c1Player.angle)*MOVE_SPEED; dy+=Math.sin(c1Player.angle)*MOVE_SPEED; moved=true; }
+  if (c1Keys['ArrowDown']||c1Keys['s']||c1Keys['S']) { dx-=Math.cos(c1Player.angle)*MOVE_SPEED; dy-=Math.sin(c1Player.angle)*MOVE_SPEED; moved=true; }
+
+  const mg=0.22;
+  const nx=c1Player.x+dx, ny=c1Player.y+dy;
+  if (c1Walkable(nx+(dx>=0?mg:-mg),c1Player.y)) c1Player.x=nx;
+  if (c1Walkable(c1Player.x,ny+(dy>=0?mg:-mg))) c1Player.y=ny;
+  c1Player.x=Math.max(0.5,Math.min(C1COLS-0.5,c1Player.x));
+  c1Player.y=Math.max(0.5,Math.min(C1ROWS-0.5,c1Player.y));
+  if (moved) c1StepCount++;
+
+  // NPC proximity trigger
+  if (!c1Talked) {
+    for (const n of C1_NPCS) {
+      if (Math.hypot(c1Player.x-n.x, c1Player.y-n.y) < 2) {
+        c1Talked = true;
+        c1QueueTut('near_npc');
+        break;
+      }
+    }
+  }
+
+  // Win: reach exit
+  if (Math.abs(c1Player.x-(C1_EXIT_C+0.5))<0.9 && Math.abs(c1Player.y-(C1_EXIT_R+0.5))<0.9) {
+    c1Won = true;
+    c1GameRunning = false;
+    playSound('win');
+    fadeOut(showChapter1WinScreen, 1000);
+  }
+}
+
+function c1Draw(now) {
+  // Pink daycare sky/floor
+  ctx.fillStyle = '#2a0a18';      // deep pink ceiling
+  ctx.fillRect(0, 0, SW, HALF_H);
+  ctx.fillStyle = '#1a0810';      // darker pink floor
+  ctx.fillRect(0, HALF_H, SW, HALF_H);
+
+  const zBuf = new Float32Array(NUM_RAYS);
+
+  for (let i=0; i<NUM_RAYS; i++) {
+    const rayAngle = c1Player.angle - FOV/2 + (i/NUM_RAYS)*FOV;
+    const cos=Math.cos(rayAngle), sin=Math.sin(rayAngle);
+    let dist=0, hit=false, rx=c1Player.x, ry=c1Player.y;
+    while (dist<30&&!hit) {
+      dist+=0.02; rx=c1Player.x+cos*dist; ry=c1Player.y+sin*dist;
+      const rc=Math.floor(rx), rr=Math.floor(ry);
+      if(rc<0||rc>=C1COLS||rr<0||rr>=C1ROWS){hit=true;break;}
+      if(C1_MAP[rr][rc]===1) hit=true;
+    }
+    const corrDist = dist*Math.cos(rayAngle-c1Player.angle);
+    zBuf[i] = corrDist;
+    const wallH = Math.min(SH, SH/(corrDist+0.0001));
+    const wallTop = HALF_H - wallH/2;
+
+    // Pink wall shading
+    const shade = Math.max(0, Math.min(1, 1-corrDist/14));
+    const r = Math.floor(180*shade + 40);
+    const g = Math.floor(60*shade + 10);
+    const b = Math.floor(120*shade + 20);
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fillRect(i, wallTop, 1, wallH);
+  }
+
+  // Draw unicorn emojis — placed inside open cells near walls so they're visible
+  const unicornSpots = [
+    {x:1.5,y:1.5},{x:7.5,y:1.5},{x:13.5,y:1.5},{x:19.5,y:1.5},
+    {x:1.5,y:11.5},{x:7.5,y:11.5},{x:13.5,y:11.5},{x:19.5,y:11.5},
+    {x:1.5,y:5.5},{x:21.5,y:5.5},{x:1.5,y:8.5},{x:21.5,y:8.5},
+  ];
+  for (const u of unicornSpots) {
+    c1DrawSprite(ctx, u.x, u.y, '🦄', 0.7, zBuf, now, false);
+  }
+
+  // Draw exit
+  c1DrawSprite(ctx, C1_EXIT_C+0.5, C1_EXIT_R+0.5, '🚪', 1.2, zBuf, now, false);
+
+  // Draw NPCs as 3D grey cylinders
+  for (const n of C1_NPCS) {
+    c1DrawCylinder(ctx, n.x, n.y, zBuf);
+  }
+
+  // Minimap
+  c1DrawMinimap();
+
+  // Soft vignette
+  const vig = ctx.createRadialGradient(SW/2,SH/2,SH*0.2,SW/2,SH/2,SH*0.72);
+  vig.addColorStop(0,'rgba(0,0,0,0)');
+  vig.addColorStop(1,'rgba(0,0,0,0.5)');
+  ctx.fillStyle=vig; ctx.fillRect(0,0,SW,SH);
+}
+
+function c1DrawSprite(ctx, wx, wy, emoji, scale, zBuf, now, wb) {
+  const dx=wx-c1Player.x, dy=wy-c1Player.y;
+  const dist=Math.hypot(dx,dy);
+  if(dist<0.3) return;
+  let sa=Math.atan2(dy,dx)-c1Player.angle;
+  while(sa<-Math.PI) sa+=Math.PI*2;
+  while(sa>Math.PI) sa-=Math.PI*2;
+  if(Math.abs(sa)>FOV/2+0.2) return;
+  const screenX=(SW/2)+(sa/(FOV/2))*(SW/2);
+  const corrDist=dist*Math.cos(sa);
+  const spriteH=Math.min(SH*1.5,(SH/corrDist)*scale);
+  const s0=Math.floor(screenX-spriteH/2), s1=Math.floor(screenX+spriteH/2);
+  let vis=false;
+  for(let col=Math.max(0,s0);col<Math.min(SW,s1);col++) { if(corrDist<zBuf[col]){vis=true;break;} }
+  if(!vis) return;
+  const fs=Math.max(8,Math.floor(spriteH*0.75));
+  const w2=wb?Math.sin(now/200)*2:0;
+  ctx.save();
+  ctx.font=`${fs}px serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.globalAlpha=Math.min(1,Math.max(0.1,1-corrDist/20));
+  ctx.fillText(emoji, screenX, SH/2+w2);
+  ctx.restore();
+}
+
+function c1DrawCylinder(ctx, wx, wy, zBuf) {
+  const dx = wx - c1Player.x, dy = wy - c1Player.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist < 0.3) return;
+
+  let sa = Math.atan2(dy, dx) - c1Player.angle;
+  while (sa < -Math.PI) sa += Math.PI * 2;
+  while (sa >  Math.PI) sa -= Math.PI * 2;
+  if (Math.abs(sa) > FOV / 2 + 0.4) return;
+
+  const corrDist = dist * Math.cos(sa);
+  if (corrDist <= 0.1) return;
+
+  // Cylinder dimensions in screen space
+  const cylH   = Math.min(SH * 1.4, (SH / corrDist) * 0.85); // height
+  const cylW   = cylH * 0.45;                                  // width (radius feel)
+  const screenX = (SW / 2) + (sa / (FOV / 2)) * (SW / 2);
+
+  const top    = HALF_H - cylH * 0.62;   // slightly above center (feet on floor)
+  const bottom = top + cylH;
+  const left   = screenX - cylW / 2;
+  const right  = screenX + cylW / 2;
+
+  const alpha = Math.min(1, Math.max(0.15, 1 - corrDist / 16));
+
+  // Draw column by column with depth check + curved shading
+  const iLeft = Math.floor(left), iRight = Math.ceil(right);
+  for (let col = Math.max(0, iLeft); col <= Math.min(SW - 1, iRight); col++) {
+    if (corrDist >= zBuf[col]) continue; // occluded by wall
+
+    // Normalised position across cylinder width [-1..1]
+    const t = ((col - left) / cylW) * 2 - 1; // -1=left edge, 0=centre, 1=right edge
+    if (t < -1 || t > 1) continue;
+
+    // Lambert shading — brightest at centre, dark at edges
+    const shade = Math.sqrt(Math.max(0, 1 - t * t));
+    const base = 80;
+    const hi   = 160;
+    const v    = Math.floor(base + (hi - base) * shade);
+
+    // Slight warm tint for the lit side, cool for shadow side
+    const r = t < 0 ? Math.floor(v * 0.85) : v;
+    const g = v;
+    const b = t < 0 ? v : Math.floor(v * 0.88);
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fillRect(col, top, 1, bottom - top);
+    ctx.restore();
+  }
+
+  // Flat elliptical top cap
+  const capH = cylW * 0.25;
+  const capCX = screenX, capCY = top;
+  const capRX = cylW / 2, capRY = capH;
+
+  // Check at least centre column is visible
+  const midCol = Math.floor(screenX);
+  if (midCol >= 0 && midCol < SW && corrDist < zBuf[midCol]) {
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.85;
+    ctx.fillStyle = `rgb(140,145,140)`;
+    ctx.beginPath();
+    ctx.ellipse(capCX, capCY, capRX, capRY, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function c1DrawMinimap() {
+  const MS=5, MX=8, MY=SH-C1ROWS*MS-8;
+  ctx.save(); ctx.globalAlpha=0.45;
+  for(let r=0;r<C1ROWS;r++) for(let c=0;c<C1COLS;c++) {
+    ctx.fillStyle=C1_MAP[r][c]===1?'#622':'#100';
+    ctx.fillRect(MX+c*MS,MY+r*MS,MS,MS);
+  }
+  ctx.fillStyle='#0f0';
+  ctx.fillRect(MX+C1_EXIT_C*MS+1,MY+C1_EXIT_R*MS+1,MS-2,MS-2);
+  ctx.fillStyle='#aaa';
+  for(const n of C1_NPCS) ctx.fillRect(MX+Math.floor(n.x)*MS+1,MY+Math.floor(n.y)*MS+1,MS-2,MS-2);
+  ctx.fillStyle='#fff';
+  const px=MX+c1Player.x*MS, py=MY+c1Player.y*MS;
+  ctx.fillRect(px-1,py-1,3,3);
+  ctx.strokeStyle='#fff'; ctx.lineWidth=1; ctx.globalAlpha=0.6;
+  ctx.beginPath(); ctx.moveTo(px,py);
+  ctx.lineTo(px+Math.cos(c1Player.angle)*6,py+Math.sin(c1Player.angle)*6);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function showChapter1WinScreen() {
+  c1GameRunning = false;
+  document.removeEventListener('keydown', c1KeyDown);
+  document.removeEventListener('keyup',   c1KeyUp);
+
+  const lines = [
+    { speaker:'YOU',    text:'Fresh air. I\'m outside.' },
+    { speaker:'YOU',    text:'A forest. It\'s dark. Something\'s moving out there.' },
+    { speaker:'SYSTEM', text:'Find the door. One key opens it. Collect them all to find which one works.' },
+  ];
+  let lineIdx = 0;
+  const box=document.getElementById('tutorial-box');
+  const spEl=document.getElementById('tutorial-speaker');
+  const txtEl=document.getElementById('tutorial-text');
+  const cont=document.getElementById('tutorial-continue');
+  cont.textContent='[ SPACE / E to continue ]';
+  box.style.display='block';
+
+  const showL = () => {
+    const l=lines[lineIdx];
+    spEl.textContent=l.speaker;
+    spEl.style.color=l.speaker==='YOU'?'#4af':'#888';
+    txtEl.textContent=l.text;
+  };
+  showL();
+
+  const fade=document.getElementById('fade');
+  fade.style.transition='opacity 0.5s'; fade.style.opacity='0';
+
+  function ck(e) {
+    if(e.key===' '||e.key==='e'||e.key==='E') {
+      e.preventDefault(); lineIdx++;
+      if(lineIdx>=lines.length) {
+        document.removeEventListener('keydown',ck);
+        box.style.display='none';
+        fadeOut(()=>{ showChapter2Card(); },700);
+      } else { showL(); }
+    } else { e.preventDefault(); }
+  }
+  document.addEventListener('keydown',ck);
+}
+
+function showChapter2Card() {
+  const card=document.getElementById('chapter-card');
+  const fade=document.getElementById('fade');
+  document.getElementById('chapter-number').textContent='CHAPTER II';
+  document.getElementById('chapter-name').textContent='THE FOREST';
+  document.getElementById('chapter-flavor').textContent='it followed you out';
+  card.style.display='flex';
+  fade.style.transition='opacity 1s ease'; fade.style.opacity='0';
+  setTimeout(()=>{ fade.style.opacity='1'; setTimeout(()=>{ card.style.display='none'; launchChapter2(); },600); },2800);
+}
+
+// ═══════════════════════════════════
+// CHAPTER 2 — THE FOREST
+// ═══════════════════════════════════
+const C2COLS=25, C2ROWS=25;
+const C2_MAP=[
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1],
+  [1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
+  [1,0,1,1,1,0,1,0,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,0,1],
+  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1],
+  [1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,1],
+  [1,0,1,0,1,0,1,1,1,0,1,0,1,1,1,0,1,0,1,0,1,0,1,0,1],
+  [1,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
+  [1,0,1,1,1,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,1,0,1,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,1,1,0,1],
+  [1,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+  [1,0,1,0,1,0,0,0,1,0,1,0,1,1,1,0,1,0,1,1,1,0,1,0,1],
+  [1,0,0,0,1,1,1,0,1,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,0,1,0,0,0,1,0,1,1,1,0,1,1,1,1,1,0,1,1,1,0,1],
+  [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+  [1,0,1,1,1,0,1,0,1,1,1,0,1,1,1,0,1,0,1,0,1,1,1,0,1],
+  [1,0,1,0,0,0,1,0,1,0,0,0,1,0,0,0,0,0,1,0,1,0,0,0,1],
+  [1,0,1,0,1,1,1,0,1,0,1,1,1,0,1,1,1,0,1,0,0,0,1,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,1],
+  [1,0,1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,0,1,0,1,0,1,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+];
+const C2_SPAWN={x:1.5,y:1.5,angle:0};
+const C2_EXIT_C=23, C2_EXIT_R=23;
+const C2_TOTAL_KEYS=8;
+const C2_KEY_SPOTS=[
+  {c:3,r:3},{c:9,r:1},{c:19,r:1},{c:1,r:11},{c:13,r:7},
+  {c:23,r:11},{c:7,r:17},{c:19,r:21},
+];
+
+let c2WorkingKey=0, c2Keys=[], c2Carried=0, c2Unlocked=false;
+let c2Player={x:1.5,y:1.5,angle:0}, c2Enemy={x:23.5,y:1.5};
+let c2EnemyTimer=0, c2EnemySpeed=55;
+let c2GameRunning=false, c2Won=false, c2Dead=false, c2AnimFrame=null;
+const c2KS={};
+let c2TutQueue=[], c2TutShowing=false, c2TutStep=null, c2TutDone=new Set();
+let c2NearEnemyFired=false;
+
+const C2_TUTORIAL=[
+  {speaker:'SYSTEM',text:'Collect keys scattered through the forest. Only 1 of 8 opens the door.',trigger:'start',objectiveAfter:'collect keys — find the door'},
+  {speaker:'YOU',text:'I can carry as many as I want. But which one works...',trigger:'start'},
+  {speaker:'???',text:'...i am hunger...',trigger:'enemy_close',objectiveAfter:'⚠ RUN'},
+];
+
+function launchChapter2() {
+  const game=document.getElementById('game-screen');
+  const hud=document.getElementById('hud');
+  const fade=document.getElementById('fade');
+
+  // Rebuild canvas if game-screen was replaced by ch1 win HTML
+  game.innerHTML='';
+  const c=document.createElement('canvas');
+  c.id='gameCanvas'; c.width=SW; c.height=SH;
+  c.style.imageRendering='pixelated';
+  game.appendChild(c);
+  game.appendChild(document.getElementById('hud')||hud);
+
+  // Reassign ctx to new canvas
+  Object.defineProperty(window,'ctx',{value:c.getContext('2d'),writable:true,configurable:true});
+
+  // Re-add HUD + tutorial box
+  const hudEl=document.createElement('div'); hudEl.id='hud';
+  hudEl.style.cssText='position:fixed;top:10px;left:0;right:0;display:flex;justify-content:center;gap:40px;font-size:13px;letter-spacing:3px;pointer-events:none;z-index:40;';
+  hudEl.innerHTML='<span id="hud-chapter" style="color:#888">CH.II — THE FOREST</span><span id="hud-objective" style="color:#aaf">collect keys</span>';
+  document.body.appendChild(hudEl);
+
+  const tbox=document.createElement('div'); tbox.id='tutorial-box';
+  tbox.style.cssText='position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);border:1px solid #444;padding:12px 28px;font-size:13px;letter-spacing:2px;color:#ccc;text-align:center;max-width:520px;display:none;z-index:50;pointer-events:none;border-radius:2px;';
+  tbox.innerHTML='<div id="tutorial-speaker" style="font-size:10px;letter-spacing:4px;color:#888;margin-bottom:6px;"></div><div id="tutorial-text" style="line-height:1.6;"></div><div style="font-size:10px;color:#555;margin-top:6px;animation:tblink 1s infinite">[ SPACE / E to continue ]</div>';
+  document.body.appendChild(tbox);
+
+  const cross=document.createElement('div'); cross.id='crosshair';
+  cross.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,0.4);font-size:16px;pointer-events:none;z-index:40;';
+  cross.textContent='+'; document.body.appendChild(cross);
+
+  c2WorkingKey=Math.floor(Math.random()*C2_TOTAL_KEYS);
+  c2Keys=C2_KEY_SPOTS.map(({c,r})=>({c,r,collected:false}));
+  c2Carried=0; c2Unlocked=false;
+  c2Player={x:C2_SPAWN.x,y:C2_SPAWN.y,angle:C2_SPAWN.angle};
+  c2Enemy={x:23.5,y:1.5}; c2EnemyTimer=0; c2EnemySpeed=55;
+  c2GameRunning=true; c2Won=false; c2Dead=false; c2NearEnemyFired=false;
+  c2TutQueue=[]; c2TutShowing=false; c2TutDone.clear();
+
+  document.addEventListener('keydown',c2KeyDown);
+  document.addEventListener('keyup',c2KeyUp);
+  fade.style.transition='opacity 1.2s ease'; fade.style.opacity='0';
+  c2AnimFrame=requestAnimationFrame(c2Loop);
+  setTimeout(()=>c2QueueTut('start'),900);
+}
+
+function c2KeyDown(e){c2KS[e.key]=true;if((e.key===' '||e.key==='e'||e.key==='E')&&c2TutShowing)c2DismissTut();e.preventDefault();}
+function c2KeyUp(e){c2KS[e.key]=false;}
+
+function c2QueueTut(trigger){
+  if(c2TutDone.has(trigger))return; c2TutDone.add(trigger);
+  C2_TUTORIAL.filter(s=>s.trigger===trigger).forEach(s=>c2TutQueue.push(s));
+  if(!c2TutShowing)c2ShowNextTut();
+}
+function c2ShowNextTut(){
+  if(!c2TutQueue.length){c2TutShowing=false;const b=document.getElementById('tutorial-box');if(b)b.style.display='none';return;}
+  c2TutShowing=true; c2TutStep=c2TutQueue.shift();
+  const box=document.getElementById('tutorial-box');
+  const spEl=document.getElementById('tutorial-speaker');
+  const txtEl=document.getElementById('tutorial-text');
+  if(!box||!spEl||!txtEl)return;
+  spEl.textContent=c2TutStep.speaker;
+  spEl.style.color=c2TutStep.speaker==='YOU'?'#4af':c2TutStep.speaker==='???'?'#f44':'#888';
+  txtEl.textContent=c2TutStep.text;
+  box.style.display='block';
+}
+function c2DismissTut(){
+  if(!c2TutShowing)return;
+  if(c2TutStep&&c2TutStep.objectiveAfter){const o=document.getElementById('hud-objective');if(o)o.textContent=c2TutStep.objectiveAfter;}
+  c2ShowNextTut();
+}
+function updateC2HUD(){
+  const o=document.getElementById('hud-objective'); if(!o)return;
+  const found=c2Keys.filter(k=>k.collected).length;
+  o.textContent=c2Unlocked?'🚪 door is open — reach it!':`🗝 ${c2Carried} carried  (${found}/${C2_TOTAL_KEYS} found)`;
+}
+
+function c2Walkable(cx,cy){const col=Math.floor(cx),row=Math.floor(cy);if(col<0||col>=C2COLS||row<0||row>=C2ROWS)return false;return C2_MAP[row][col]===0;}
+
+function c2BFS(fc,fr,tc,tr){
+  fc=Math.max(0,Math.min(C2COLS-1,fc));fr=Math.max(0,Math.min(C2ROWS-1,fr));
+  tc=Math.max(0,Math.min(C2COLS-1,tc));tr=Math.max(0,Math.min(C2ROWS-1,tr));
+  if(fc===tc&&fr===tr)return[];
+  const vis=Array.from({length:C2ROWS},()=>new Array(C2COLS).fill(false));
+  const prev=Array.from({length:C2ROWS},()=>new Array(C2COLS).fill(null));
+  vis[fr][fc]=true;const q=[{c:fc,r:fr}];const dirs=[[0,-1],[0,1],[-1,0],[1,0]];
+  while(q.length){
+    const cur=q.shift();
+    if(cur.c===tc&&cur.r===tr){const path=[];let node={c:tc,r:tr};while(node){path.unshift(node);node=prev[node.r][node.c];}return path;}
+    for(const[dc,dr]of dirs){const nc=cur.c+dc,nr=cur.r+dr;if(nc>=0&&nc<C2COLS&&nr>=0&&nr<C2ROWS&&!vis[nr][nc]&&C2_MAP[nr][nc]===0){vis[nr][nc]=true;prev[nr][nc]=cur;q.push({c:nc,r:nr});}}
+  }
+  return[];
+}
+
+function c2Loop(now){
+  if(!c2GameRunning)return;
+  const cv=document.getElementById('gameCanvas'); if(!cv)return;
+  const cx=cv.getContext('2d');
+  c2Update();
+  c2Draw(cx,now);
+  c2AnimFrame=requestAnimationFrame(c2Loop);
+}
+
+function c2Update(){
+  if(c2Won||c2Dead||c2TutShowing)return;
+  if(c2KS['ArrowLeft']||c2KS['a']||c2KS['A'])c2Player.angle-=TURN_SPEED;
+  if(c2KS['ArrowRight']||c2KS['d']||c2KS['D'])c2Player.angle+=TURN_SPEED;
+  let dx=0,dy=0;
+  if(c2KS['ArrowUp']||c2KS['w']||c2KS['W']){dx+=Math.cos(c2Player.angle)*MOVE_SPEED;dy+=Math.sin(c2Player.angle)*MOVE_SPEED;}
+  if(c2KS['ArrowDown']||c2KS['s']||c2KS['S']){dx-=Math.cos(c2Player.angle)*MOVE_SPEED;dy-=Math.sin(c2Player.angle)*MOVE_SPEED;}
+  const mg=0.22,nx=c2Player.x+dx,ny=c2Player.y+dy;
+  if(c2Walkable(nx+(dx>=0?mg:-mg),c2Player.y))c2Player.x=nx;
+  if(c2Walkable(c2Player.x,ny+(dy>=0?mg:-mg)))c2Player.y=ny;
+  c2Player.x=Math.max(0.5,Math.min(C2COLS-0.5,c2Player.x));
+  c2Player.y=Math.max(0.5,Math.min(C2ROWS-0.5,c2Player.y));
+
+  let changed=false;
+  for(let i=0;i<c2Keys.length;i++){
+    const k=c2Keys[i];
+    if(!k.collected&&Math.abs(c2Player.x-(k.c+0.5))<0.7&&Math.abs(c2Player.y-(k.r+0.5))<0.7){
+      k.collected=true;c2Carried++;changed=true;
+      if(i===c2WorkingKey)c2Unlocked=true;
+    }
+  }
+  if(changed)updateC2HUD();
+
+  c2EnemyTimer++;
+  if(c2EnemyTimer>=c2EnemySpeed){
+    c2EnemyTimer=0;
+    const path=c2BFS(Math.floor(c2Enemy.x),Math.floor(c2Enemy.y),Math.floor(c2Player.x),Math.floor(c2Player.y));
+    if(path.length>1){c2Enemy.x=path[1].c+0.5;c2Enemy.y=path[1].r+0.5;}
+  }
+  const distE=Math.hypot(c2Player.x-c2Enemy.x,c2Player.y-c2Enemy.y);
+  if(!c2NearEnemyFired&&distE<6){c2NearEnemyFired=true;c2EnemySpeed=35;c2QueueTut('enemy_close');}
+  if(distE<0.7){c2Dead=true;c2GameRunning=false;playSound('death');fadeOut(showC2DeadScreen,600);return;}
+  if(c2Unlocked&&Math.abs(c2Player.x-(C2_EXIT_C+0.5))<0.9&&Math.abs(c2Player.y-(C2_EXIT_R+0.5))<0.9){
+    c2Won=true;c2GameRunning=false;playSound('win');fadeOut(showC2WinScreen,1000);
+  }
+}
+
+function c2Draw(cx,now){
+  cx.fillStyle='#050e05';cx.fillRect(0,0,SW,HALF_H);
+  cx.fillStyle='#030803';cx.fillRect(0,HALF_H,SW,HALF_H);
+  if(Math.random()<0.03){cx.fillStyle='rgba(255,255,255,0.6)';cx.fillRect(Math.random()*SW|0,Math.random()*(HALF_H*0.6)|0,1,1);}
+
+  const zBuf=new Float32Array(NUM_RAYS);
+  for(let i=0;i<NUM_RAYS;i++){
+    const ra=c2Player.angle-FOV/2+(i/NUM_RAYS)*FOV;
+    const cos=Math.cos(ra),sin=Math.sin(ra);
+    let dist=0,hit=false,rx=c2Player.x,ry=c2Player.y;
+    while(dist<30&&!hit){dist+=0.02;rx=c2Player.x+cos*dist;ry=c2Player.y+sin*dist;const rc=Math.floor(rx),rr=Math.floor(ry);if(rc<0||rc>=C2COLS||rr<0||rr>=C2ROWS){hit=true;break;}if(C2_MAP[rr][rc]===1)hit=true;}
+    const cd=dist*Math.cos(ra-c2Player.angle);zBuf[i]=cd;
+    const wh=Math.min(SH,SH/(cd+0.0001)),wt=HALF_H-wh/2;
+    const sh=Math.max(0,Math.min(1,1-cd/14));
+    const r=Math.floor(20+40*sh),g=Math.floor(35+55*sh),b=Math.floor(10+20*sh);
+    cx.fillStyle=`rgb(${r},${g},${b})`;cx.fillRect(i,wt,1,wh);
+    if(i%3===0&&wh>6){cx.fillStyle=`rgba(0,0,0,${0.12*sh})`;cx.fillRect(i,wt,1,wh);}
+  }
+
+  for(let i=0;i<c2Keys.length;i++){const k=c2Keys[i];if(!k.collected)c2Spr(cx,k.c+0.5,k.r+0.5,'🗝️',0.7,zBuf);}
+
+  // Trees and bushes scattered in open cells throughout the forest
+  const forestDeco = [
+    {x:3.5,y:1.5,e:'🌲'},{x:7.5,y:1.5,e:'🌳'},{x:11.5,y:1.5,e:'🌲'},{x:19.5,y:1.5,e:'🌲'},
+    {x:1.5,y:5.5,e:'🌿'},{x:5.5,y:5.5,e:'🌲'},{x:9.5,y:5.5,e:'🌳'},{x:15.5,y:5.5,e:'🌿'},
+    {x:21.5,y:5.5,e:'🌲'},{x:23.5,y:5.5,e:'🌳'},
+    {x:3.5,y:9.5,e:'🌿'},{x:7.5,y:9.5,e:'🌲'},{x:13.5,y:9.5,e:'🌿'},{x:19.5,y:9.5,e:'🌳'},
+    {x:1.5,y:11.5,e:'🌲'},{x:5.5,y:11.5,e:'🌿'},{x:11.5,y:11.5,e:'🌲'},{x:17.5,y:11.5,e:'🌳'},
+    {x:23.5,y:11.5,e:'🌿'},
+    {x:3.5,y:15.5,e:'🌲'},{x:9.5,y:15.5,e:'🌳'},{x:15.5,y:15.5,e:'🌿'},{x:21.5,y:15.5,e:'🌲'},
+    {x:1.5,y:17.5,e:'🌿'},{x:7.5,y:17.5,e:'🌲'},{x:13.5,y:17.5,e:'🌳'},{x:19.5,y:17.5,e:'🌿'},
+    {x:5.5,y:21.5,e:'🌲'},{x:11.5,y:21.5,e:'🌿'},{x:17.5,y:21.5,e:'🌲'},{x:23.5,y:21.5,e:'🌳'},
+    {x:3.5,y:23.5,e:'🌿'},{x:9.5,y:23.5,e:'🌲'},{x:15.5,y:23.5,e:'🌳'},{x:21.5,y:23.5,e:'🌿'},
+  ];
+  for(const d of forestDeco) c2Spr(cx,d.x,d.y,d.e,1.1,zBuf);
+  c2Spr(cx,C2_EXIT_C+0.5,C2_EXIT_R+0.5,c2Unlocked?'🚪':'🔒',1.1,zBuf);
+
+  const distE=Math.hypot(c2Player.x-c2Enemy.x,c2Player.y-c2Enemy.y);
+  if(distE<12)c2Dot(cx,c2Enemy.x,c2Enemy.y,zBuf,now);
+
+  c2Minimap(cx);
+
+  const vig=cx.createRadialGradient(SW/2,SH/2,SH*0.2,SW/2,SH/2,SH*0.72);
+  vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(0,0,0,0.7)');
+  cx.fillStyle=vig;cx.fillRect(0,0,SW,SH);
+  if(distE<5){const a=(1-distE/5)*0.35*(0.5+0.5*Math.sin(now/60));cx.fillStyle=`rgba(255,0,0,${a})`;cx.fillRect(0,0,SW,SH);}
+  for(let y=0;y<SH;y+=3){cx.fillStyle='rgba(0,0,0,0.05)';cx.fillRect(0,y,SW,1);}
+}
+
+function c2Spr(cx,wx,wy,emoji,scale,zBuf){
+  const dx=wx-c2Player.x,dy=wy-c2Player.y,dist=Math.hypot(dx,dy);
+  if(dist<0.3)return;
+  let sa=Math.atan2(dy,dx)-c2Player.angle;
+  while(sa<-Math.PI)sa+=Math.PI*2;while(sa>Math.PI)sa-=Math.PI*2;
+  if(Math.abs(sa)>FOV/2+0.2)return;
+  const sx=(SW/2)+(sa/(FOV/2))*(SW/2),cd=dist*Math.cos(sa);
+  const sh=Math.min(SH*1.5,(SH/cd)*scale);
+  let vis=false;const s0=Math.floor(sx-sh/2),s1=Math.floor(sx+sh/2);
+  for(let col=Math.max(0,s0);col<Math.min(SW,s1);col++){if(cd<zBuf[col]){vis=true;break;}}
+  if(!vis)return;
+  const fs=Math.max(8,Math.floor(sh*0.75));
+  cx.save();cx.font=`${fs}px serif`;cx.textAlign='center';cx.textBaseline='middle';
+  cx.globalAlpha=Math.min(1,Math.max(0.1,1-cd/20));cx.fillText(emoji,sx,SH/2);cx.restore();
+}
+
+function c2Dot(cx,wx,wy,zBuf,now){
+  const dx=wx-c2Player.x,dy=wy-c2Player.y,dist=Math.hypot(dx,dy);
+  if(dist<0.3)return;
+  let sa=Math.atan2(dy,dx)-c2Player.angle;
+  while(sa<-Math.PI)sa+=Math.PI*2;while(sa>Math.PI)sa-=Math.PI*2;
+  if(Math.abs(sa)>FOV/2+0.2)return;
+  const sx=(SW/2)+(sa/(FOV/2))*(SW/2),cd=dist*Math.cos(sa);
+  const mc=Math.max(0,Math.min(SW-1,Math.floor(sx)));
+  if(cd>=zBuf[mc])return;
+  const r=Math.max(3,Math.min(18,(SH/cd)*0.18));
+  const alpha=Math.min(1,Math.max(0.15,1-cd/14));
+  cx.save();cx.globalAlpha=alpha*(0.7+0.3*Math.sin(now/120));
+  cx.fillStyle='#ff1111';cx.shadowColor='#ff0000';cx.shadowBlur=12;
+  cx.beginPath();cx.arc(sx,SH/2,r,0,Math.PI*2);cx.fill();cx.restore();
+}
+
+function c2Minimap(cx){
+  const MS=4,MX=8,MY=SH-C2ROWS*MS-8;
+  cx.save();cx.globalAlpha=0.45;
+  for(let r=0;r<C2ROWS;r++)for(let c=0;c<C2COLS;c++){cx.fillStyle=C2_MAP[r][c]===1?'#142':'#001';cx.fillRect(MX+c*MS,MY+r*MS,MS,MS);}
+  cx.fillStyle='#ff0';for(const k of c2Keys)if(!k.collected)cx.fillRect(MX+k.c*MS+1,MY+k.r*MS+1,MS-2,MS-2);
+  cx.fillStyle=c2Unlocked?'#0f0':'#f80';cx.fillRect(MX+C2_EXIT_C*MS+1,MY+C2_EXIT_R*MS+1,MS-2,MS-2);
+  cx.fillStyle='#f00';cx.fillRect(MX+Math.floor(c2Enemy.x)*MS+1,MY+Math.floor(c2Enemy.y)*MS+1,MS-2,MS-2);
+  cx.fillStyle='#fff';const px=MX+c2Player.x*MS,py=MY+c2Player.y*MS;cx.fillRect(px-1,py-1,3,3);
+  cx.strokeStyle='#fff';cx.lineWidth=1;cx.globalAlpha=0.6;cx.beginPath();cx.moveTo(px,py);cx.lineTo(px+Math.cos(c2Player.angle)*5,py+Math.sin(c2Player.angle)*5);cx.stroke();
+  cx.restore();
+}
+
+function showC2DeadScreen(){
+  c2GameRunning=false;
+  document.removeEventListener('keydown',c2KeyDown);document.removeEventListener('keyup',c2KeyUp);
+  document.body.innerHTML=`<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;font-family:'Courier New',monospace;color:#fff;">
+    <div style="font-size:64px;">🔴</div>
+    <div style="font-size:32px;font-weight:bold;letter-spacing:8px;color:#f00;text-shadow:0 0 30px #f00;">IT FOUND YOU</div>
+    <div style="font-size:12px;letter-spacing:4px;color:#555;">the forest isn't safe</div>
+    <button onclick="location.reload()" style="background:#000;border:2px solid #f00;color:#f00;padding:12px 36px;font-size:14px;letter-spacing:4px;cursor:pointer;font-family:'Courier New',monospace;margin-top:10px;">TRY AGAIN</button>
+  </div>`;
+}
+
+function showC2WinScreen(){
+  c2GameRunning=false;
+  document.removeEventListener('keydown',c2KeyDown);document.removeEventListener('keyup',c2KeyUp);
+  document.body.innerHTML=`<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;font-family:'Courier New',monospace;color:#fff;">
+    <div style="font-size:13px;letter-spacing:8px;color:#4a8;margin-bottom:8px;">CHAPTER II COMPLETE</div>
+    <div style="font-size:44px;font-weight:bold;letter-spacing:8px;color:#4f4;text-shadow:0 0 30px #0f0;">ESCAPED</div>
+    <div style="font-size:12px;letter-spacing:4px;color:#686;">the trees go quiet behind you</div>
+    <div style="font-size:11px;letter-spacing:3px;color:#444;margin-top:6px;">chapter III — coming soon</div>
+    <button onclick="location.reload()" style="background:#000;border:2px solid #4f4;color:#4f4;padding:12px 36px;font-size:14px;letter-spacing:4px;cursor:pointer;font-family:'Courier New',monospace;margin-top:16px;">PLAY AGAIN</button>
+  </div>`;
+}
+
+// Start ambient on first interaction
+document.addEventListener('keydown',()=>{startAmbient();},{once:true});
+</script>
+</body>
+</html>
