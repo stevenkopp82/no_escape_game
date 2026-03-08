@@ -133,8 +133,8 @@
   <!-- Repel button -->
   <button id="mobile-story-repel" style="position:absolute; bottom:20px; right:20px; background:rgba(255,136,0,0.2); border:2px solid #f80; color:#f80; font-size:13px; font-weight:bold; letter-spacing:1px; width:70px; height:70px; border-radius:50%; cursor:pointer; font-family:'Courier New',monospace; touch-action:none; pointer-events:all;">REPEL</button>
 </div>
-<div id="boss-bar" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#000; border-top:2px solid #800; padding:8px 20px; z-index:50; flex-direction:column; align-items:center; gap:4px;">
-  <div style="color:#f55; font-size:11px; letter-spacing:5px; text-shadow:0 0 8px #f00;">✦ RED DOT ✦</div>
+<div id="boss-bar" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#000; border-top:2px solid #800; padding:8px 20px; z-index:50; flex-direction:column; align-items:center; gap:4px; cursor:pointer; user-select:none;" onclick="bossBarClick()">
+  <div id="boss-bar-label" style="color:#f55; font-size:11px; letter-spacing:5px; text-shadow:0 0 8px #f00;">✦ RED DOT ✦</div>
   <div style="display:flex; align-items:center; gap:10px; width:100%; max-width:600px;">
     <div style="position:relative; flex:1; height:16px; background:#1a0000; border:1px solid #600; border-radius:2px; overflow:hidden;">
       <div id="boss-bar-fill" style="position:absolute; top:0; left:0; height:100%; width:100%; background:linear-gradient(90deg,#a00,#f33,#f88); border-radius:2px; transition:width 0.3s;"></div>
@@ -156,6 +156,8 @@
   <button onclick="exitStoryMode()" style="position:fixed; top:10px; right:16px; background:#000; border:1px solid #555; color:#555; padding:4px 14px; font-size:11px; letter-spacing:2px; cursor:pointer; font-family:'Courier New',monospace; z-index:210;">✕ MENU</button>
   <div id="story-win" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:220; flex-direction:column; align-items:center; justify-content:center; gap:20px;">
     <div style="color:#0f0; font-size:48px; font-weight:bold; letter-spacing:8px; text-shadow:0 0 30px #0f0;">YOU ESCAPED</div>
+    <div style="color:#f80; font-size:13px; letter-spacing:4px; text-shadow:0 0 8px #f80;">🔒 BOSS SECRET UNLOCKED</div>
+    <div style="color:#888; font-size:10px; letter-spacing:2px;">click the boss bar 4 times to enter stage 2</div>
     <div style="color:#ff0; font-size:18px; letter-spacing:4px;">the banana was defeated</div>
     <button onclick="exitStoryMode()" style="background:#000; border:2px solid #0f0; color:#0f0; padding:12px 40px; font-size:16px; letter-spacing:4px; cursor:pointer; font-family:'Courier New',monospace; margin-top:10px;">MENU</button>
   </div>
@@ -477,6 +479,9 @@ function computeWinSmiles() {
   const negative = total < 0;
   const clamped = Math.max(0, total);
 
+  // Boss secret unlock condition
+  const bossSecret = (currentDifficulty === 'hard' || currentDifficulty === 'extreme');
+
   // Build smile string
   const smileEl = document.getElementById('win-smiles');
   const breakEl = document.getElementById('win-breakdown');
@@ -494,9 +499,153 @@ function computeWinSmiles() {
       }
     });
     html += `<span style="color:${negative?'#f80':'#0f0'}; font-size:14px; letter-spacing:3px;">= ${total} ${negative?'😎':'😊'}</span>`;
+    if (bossSecret) {
+      html += `<br><br><span style="color:#f80; font-size:13px; letter-spacing:4px; text-shadow:0 0 8px #f80;">🔒 BOSS SECRET UNLOCKED</span><br>`;
+      html += `<span style="color:#888; font-size:10px; letter-spacing:2px;">click the boss bar 4 times to enter stage 2</span>`;
+    }
     breakEl.innerHTML = html;
   }
 }
+
+function bossBarClick() {
+  if (!modifiers.bossbar || gameOver || won) return;
+  if (bossStage === 2) return; // immune in stage 2 — 0 damage
+
+  bossHP = Math.max(0, bossHP - 25);
+  updateBossBarUI();
+
+  if (bossHP <= 0) {
+    enterBossStage2();
+  }
+}
+
+function updateBossBarUI() {
+  const fill = document.getElementById('boss-bar-fill');
+  const txt = document.getElementById('boss-bar-text');
+  const lbl = document.getElementById('boss-bar-label');
+  const bb = document.getElementById('boss-bar');
+  if (!fill || !txt) return;
+
+  if (bossStage === 1) {
+    fill.style.width = bossHP + '%';
+    fill.style.background = bossHP > 50
+      ? 'linear-gradient(90deg,#a00,#f33,#f88)'
+      : 'linear-gradient(90deg,#a00,#f80,#ff0)';
+    txt.textContent = bossHP + ' / 100';
+  } else {
+    // Stage 2: show missiles remaining, bar pulses purple
+    const rem = bossMissiles.reduce((a,m)=>a+(m.wallsLeft>0?1:0), 0) + Math.max(0, 10 - bossMissilesFired);
+    fill.style.width = '100%';
+    fill.style.background = 'linear-gradient(90deg,#606,#c0f,#f0f)';
+    txt.textContent = '💀 STAGE 2';
+    if (lbl) { lbl.textContent = '✦ IMMUNE ✦'; lbl.style.color='#f0f'; lbl.style.textShadow='0 0 12px #f0f'; }
+    if (bb) { bb.style.borderTopColor='#808'; bb.style.background='#0a000a'; }
+  }
+}
+
+function enterBossStage2() {
+  bossStage = 2;
+  bossMissiles = [];
+  bossMissilesFired = 0;
+  updateBossBarUI();
+}
+
+// Fire a missile from enemy toward player, it breaks up to 10 walls then explodes
+function fireBossMissile() {
+  if (!enemy || !player) return;
+  const sx = enemy.x, sy = enemy.y;
+  const dx = player.x - sx, dy = player.y - sy;
+  const len = Math.hypot(dx, dy) || 1;
+  const speed = CELL * 0.18;
+  bossMissiles.push({
+    x: sx, y: sy,
+    vx: (dx/len)*speed, vy: (dy/len)*speed,
+    wallsLeft: 10, exploded: false,
+    trail: []
+  });
+  bossMissilesFired++;
+}
+
+function updateBossMissiles() {
+  if (bossStage !== 2) return;
+
+  // Fire missiles until 10 total launched
+  bossMissileTimer++;
+  if (bossMissileTimer >= BOSS_MISSILE_INTERVAL && bossMissilesFired < 10) {
+    bossMissileTimer = 0;
+    fireBossMissile();
+  }
+
+  // Move missiles
+  for (let m of bossMissiles) {
+    if (m.exploded) continue;
+    m.trail.push({x:m.x, y:m.y});
+    if (m.trail.length > 8) m.trail.shift();
+    m.x += m.vx; m.y += m.vy;
+
+    const mc = Math.floor(m.x / CELL), mr = Math.floor(m.y / CELL);
+    if (mc < 0 || mc >= COLS || mr < 0 || mr >= ROWS) { m.exploded = true; continue; }
+
+    if (maze[mr][mc] === 1) {
+      maze[mr][mc] = 0; // break wall
+      m.wallsLeft--;
+      if (m.wallsLeft <= 0) { m.exploded = true; }
+    }
+  }
+
+  // Remove fully exploded missiles after a moment (keep for draw)
+  // Check if all missiles are done and all 10 fired
+  if (bossMissilesFired >= 10 && bossMissiles.every(m => m.exploded)) {
+    // Boss explodes — end stage 2
+    bossStage = 3;
+    const lbl = document.getElementById('boss-bar-label');
+    const fill = document.getElementById('boss-bar-fill');
+    const txt = document.getElementById('boss-bar-text');
+    const bb = document.getElementById('boss-bar');
+    if (lbl) { lbl.textContent = '✦ DEFEATED ✦'; lbl.style.color='#0f0'; lbl.style.textShadow='0 0 12px #0f0'; }
+    if (fill) { fill.style.width='0%'; }
+    if (txt) { txt.textContent = 'DEAD'; txt.style.color='#0f0'; }
+    if (bb) { bb.style.borderTopColor='#080'; }
+  }
+}
+
+function drawBossMissiles(ctx) {
+  for (let m of bossMissiles) {
+    if (m.exploded && m.trail.length === 0) continue;
+    // Trail
+    for (let i=0; i<m.trail.length; i++) {
+      const alpha = (i/m.trail.length)*0.5;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#f0f';
+      ctx.beginPath();
+      ctx.arc(m.trail[i].x, m.trail[i].y, 3, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    if (!m.exploded) {
+      // Missile head
+      ctx.save();
+      ctx.font = `${CELL*0.55}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🚀', m.x, m.y);
+      ctx.restore();
+    } else {
+      // Explosion flash
+      m.trail.shift();
+      ctx.save();
+      ctx.globalAlpha = m.trail.length / 8;
+      ctx.fillStyle = '#ff0';
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, CELL*0.6, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+}
+
+let bossMissilesFired = 0;
 
 function selectDifficulty(d) {
   currentDifficulty = d;
@@ -587,6 +736,13 @@ function generateMaze(cols, rows) {
 }
 
 let maze, player, enemy, coins, totalCoins, collectedCoins, gameOver, won, animFrame;
+
+// Boss bar state
+let bossHP = 100;
+let bossStage = 1; // 1 = normal, 2 = flying/missile phase
+let bossMissiles = []; // [{x,y,vx,vy,wallsLeft}]
+let bossMissileTimer = 0;
+const BOSS_MISSILE_INTERVAL = 90; // frames between missiles in stage 2
 let enemyMoveTimer = 0;
 let enemySpeed = 20; // frames between moves
 
@@ -600,6 +756,15 @@ let repelFlash = 0;
 
 function initGame() {
   maze = generateMaze(COLS, ROWS);
+  bossHP = 100; bossStage = 1; bossMissiles = []; bossMissileTimer = 0; bossMissilesFired = 0;
+  const lbl = document.getElementById('boss-bar-label');
+  const fill = document.getElementById('boss-bar-fill');
+  const txt = document.getElementById('boss-bar-text');
+  const bb = document.getElementById('boss-bar');
+  if (lbl) { lbl.textContent = '✦ RED DOT ✦'; lbl.style.color='#f55'; lbl.style.textShadow='0 0 8px #f00'; }
+  if (fill) { fill.style.width='100%'; fill.style.background='linear-gradient(90deg,#a00,#f33,#f88)'; fill.style.boxShadow=''; }
+  if (txt) { txt.textContent='100 / 100'; txt.style.color='#f55'; }
+  if (bb) { bb.style.borderTopColor='#800'; bb.style.background='#000'; }
   
   // Find open cells
   function openCells() {
@@ -1087,11 +1252,27 @@ function draw(now) {
                      currentDifficulty === 'extreme' ? 'rgba(60,0,0,0.3)' :
                      'rgba(40,100,200,0.15)';
   // emoji arrays per difficulty (some walls pick randomly from the set)
-  const wallEmojis = currentDifficulty === 'baby'    ? ['🦄'] :
+  const diffEmojis = currentDifficulty === 'baby'    ? ['🦄'] :
                      currentDifficulty === 'easy'    ? ['🌲', '🌿'] :
                      currentDifficulty === 'medium'  ? ['📺', '🛋️'] :
                      currentDifficulty === 'hard'    ? ['🔥'] :
                      currentDifficulty === 'extreme' ? ['💀'] : null;
+
+  // Modifier wall emojis — blended in alongside difficulty emojis
+  let modEmojis = [];
+  if (modifiers.rifle)      modEmojis.push('🪖');
+  if (modifiers.portals)    modEmojis.push('🪜');
+  if (modifiers.destroyer)  modEmojis.push('🥊','🪑');
+  if (modifiers.bots)       modEmojis.push('🔬','⚗️','🧪','🔭');
+  if (modifiers.magnet)     modEmojis.push('⚙️','🪛','🔩','🪝');
+  if (modifiers.oneexit)    modEmojis.push('🚪');
+  if (modifiers.hiddencams) modEmojis.push('🎥');
+  if (modifiers.bossbar)    modEmojis.push('🕯️');
+
+  const wallEmojis = modEmojis.length > 0
+    ? [...(diffEmojis || []), ...modEmojis]
+    : diffEmojis;
+
   const emojiAll   = currentDifficulty === 'extreme';
   const emojiSome  = (c, r) => (c * 7 + r * 13) % 3 === 0;
   const pickEmoji  = (c, r) => wallEmojis[(c * 3 + r * 5) % wallEmojis.length];
@@ -1237,6 +1418,17 @@ function draw(now) {
   let pulse = 0.7 + 0.3*Math.sin(now/200);
   ctx.save();
   ctx.globalAlpha = enemyAlpha;
+
+  // Stage 2: purple flying glow ring
+  if (modifiers.bossbar && bossStage === 2) {
+    ctx.shadowBlur = 30 + 10*Math.sin(now/100);
+    ctx.shadowColor = '#f0f';
+    ctx.strokeStyle = `rgba(255,0,255,${0.7+0.3*Math.sin(now/100)})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(enemy.x, enemy.y, 22 + 4*Math.sin(now/80), 0, Math.PI*2);
+    ctx.stroke();
+  }
   // Hidden cams: draw a glowing red outline ring when enemy is out of normal range
   if (modifiers.hiddencams && enemyDist > 6) {
     ctx.shadowBlur = 18 + 8*Math.sin(now/200);
@@ -1282,7 +1474,10 @@ function draw(now) {
   ctx.restore();
   } // end enemyAlpha > 0
   } // end baby mode check
-  
+
+  // Draw boss missiles (stage 2)
+  if (modifiers.bossbar && bossStage === 2) drawBossMissiles(ctx);
+
   // Draw player (white ball)
   ctx.save();
   // Repel flash ring
@@ -2094,18 +2289,18 @@ function gameLoop(now) {
   draw(now);
   // Update boss bar cosmetics
   if (modifiers.bossbar && currentDifficulty !== 'baby') {
+    updateBossMissiles();
     const fill = document.getElementById('boss-bar-fill');
-    const txt = document.getElementById('boss-bar-text');
-    if (fill && txt) {
-      // Flicker: 97-100% width to feel alive
-      const flicker = 97 + 3 * Math.abs(Math.sin(now / 400));
-      fill.style.width = flicker.toFixed(1) + '%';
-      // Pulse red glow based on enemy distance
+    if (fill && bossStage === 1) {
       const dist = Math.abs(enemy.c - player.c) + Math.abs(enemy.r - player.r);
       const danger = Math.max(0, 1 - dist / 8);
       fill.style.boxShadow = `0 0 ${6 + danger*14}px rgba(255,${Math.floor(50+danger*30)},0,${0.4+danger*0.5})`;
-      txt.textContent = '100 / 100';
     }
+  }
+
+  // Stage 2: enemy floats (bobbing animation)
+  if (modifiers.bossbar && bossStage === 2 && enemy) {
+    enemy.y = enemy.r * CELL + CELL/2 + Math.sin(now / 200) * CELL * 0.4;
   }
   animFrame = requestAnimationFrame(gameLoop);
 }
