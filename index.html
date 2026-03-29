@@ -273,210 +273,126 @@
     <button class="menu-btn" id="btn-extreme" onclick="selectDifficulty('extreme')" onmouseenter="previewDifficulty('extreme')" style="border-color:#f0f; color:#f0f;">
       EXTREME<br><span style="font-size:10px; letter-spacing:1px; opacity:0.7;">NIGHTMARE</span>
     </button>
-    <button class="menu-btn" id="btn-custom" onclick="selectDifficulty('custom')" onmouseenter="previewDifficulty('custom')" style="border-color:#fa0; color:#fa0;">
-      CUSTOM<br><span style="font-size:10px; letter-spacing:1px; opacity:0.7;">YOUR RULES</span>
-    </button>
+
   </div>
 
-  <!-- Custom mode panel -->
-  <div id="custom-panel" style="display:none; flex-direction:column; gap:10px; background:#0a0800; border:1px solid #a60; padding:14px 18px; font-family:'Courier New',monospace; font-size:12px; color:#fa0; letter-spacing:2px; max-width:760px; margin-top:2px;">
-    <div style="font-size:11px; letter-spacing:4px; color:#fa0; border-bottom:1px solid #a60; padding-bottom:6px;">&#9881; CUSTOM SETTINGS</div>
-    <div style="display:flex; flex-wrap:wrap; gap:16px 28px;">
 
-      <div style="display:flex; flex-direction:column; gap:4px;">
-        <label style="color:#fa0; font-size:10px; letter-spacing:3px;">PLAYER SPEED</label>
-        <div style="display:flex; gap:5px; flex-wrap:wrap;">
-          <button class="cs-btn" id="cs-pspeed-very_slow" onclick="setCustom('playerSpeed','very_slow')">VERY SLOW</button>
-          <button class="cs-btn" id="cs-pspeed-slow"      onclick="setCustom('playerSpeed','slow')">SLOW</button>
-          <button class="cs-btn" id="cs-pspeed-normal"    onclick="setCustom('playerSpeed','normal')">NORMAL</button>
-          <button class="cs-btn" id="cs-pspeed-fast"      onclick="setCustom('playerSpeed','fast')">FAST</button>
-          <button class="cs-btn" id="cs-pspeed-very_fast" onclick="setCustom('playerSpeed','very_fast')">VERY FAST</button>
-        </div>
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:4px;">
-        <label style="color:#fa0; font-size:10px; letter-spacing:3px;">MONSTER SPEED</label>
-        <div style="display:flex; gap:5px; flex-wrap:wrap;">
-          <button class="cs-btn" id="cs-mspeed-frozen"    onclick="setCustom('monsterSpeed','frozen')">FROZEN</button>
-          <button class="cs-btn" id="cs-mspeed-very_slow" onclick="setCustom('monsterSpeed','very_slow')">VERY SLOW</button>
-          <button class="cs-btn" id="cs-mspeed-slow"      onclick="setCustom('monsterSpeed','slow')">SLOW</button>
-          <button class="cs-btn" id="cs-mspeed-normal"    onclick="setCustom('monsterSpeed','normal')">NORMAL</button>
-          <button class="cs-btn" id="cs-mspeed-fast"      onclick="setCustom('monsterSpeed','fast')">FAST</button>
-          <button class="cs-btn" id="cs-mspeed-very_fast" onclick="setCustom('monsterSpeed','very_fast')">VERY FAST</button>
-        </div>
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:4px;">
-        <label style="color:#fa0; font-size:10px; letter-spacing:3px;">REPEL STUN</label>
-        <div style="display:flex; gap:5px; flex-wrap:wrap;">
-          <button class="cs-btn" id="cs-stun-1s"  onclick="setCustom('repelStun','1s')">1s</button>
-          <button class="cs-btn" id="cs-stun-3s"  onclick="setCustom('repelStun','3s')">3s</button>
-          <button class="cs-btn" id="cs-stun-5s"  onclick="setCustom('repelStun','5s')">5s</button>
-          <button class="cs-btn" id="cs-stun-8s"  onclick="setCustom('repelStun','8s')">8s</button>
-          <button class="cs-btn" id="cs-stun-15s" onclick="setCustom('repelStun','15s')">15s</button>
-        </div>
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:4px;">
-        <label style="color:#fa0; font-size:10px; letter-spacing:3px;">REPEL COOLDOWN</label>
-        <div style="display:flex; gap:5px; flex-wrap:wrap;">
-          <button class="cs-btn" id="cs-cd-3s"  onclick="setCustom('repelCooldown','3s')">3s</button>
-          <button class="cs-btn" id="cs-cd-5s"  onclick="setCustom('repelCooldown','5s')">5s</button>
-          <button class="cs-btn" id="cs-cd-8s"  onclick="setCustom('repelCooldown','8s')">8s</button>
-          <button class="cs-btn" id="cs-cd-15s" onclick="setCustom('repelCooldown','15s')">15s</button>
-          <button class="cs-btn" id="cs-cd-30s" onclick="setCustom('repelCooldown','30s')">30s</button>
-        </div>
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:4px;">
-        <label style="color:#fa0; font-size:10px; letter-spacing:3px;">COINS</label>
-        <div style="display:flex; gap:5px; flex-wrap:wrap;">
-          <button class="cs-btn" id="cs-coins-1"     onclick="setCustom('coins','1')">1</button>
-          <button class="cs-btn" id="cs-coins-few"   onclick="setCustom('coins','few')">FEW</button>
-          <button class="cs-btn" id="cs-coins-some"  onclick="setCustom('coins','some')">SOME</button>
-          <button class="cs-btn" id="cs-coins-many"  onclick="setCustom('coins','many')">MANY</button>
-          <button class="cs-btn" id="cs-coins-flood" onclick="setCustom('coins','flood')">FLOOD</button>
-        </div>
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:4px;">
-        <label style="color:#fa0; font-size:10px; letter-spacing:3px;">MONSTERS</label>
-        <div style="display:flex; gap:5px; flex-wrap:wrap;">
-          <button class="cs-btn" id="cs-monsters-0" onclick="setCustom('numMonsters','0')">0</button>
-          <button class="cs-btn" id="cs-monsters-1" onclick="setCustom('numMonsters','1')">1</button>
-          <button class="cs-btn" id="cs-monsters-2" onclick="setCustom('numMonsters','2')">2</button>
-          <button class="cs-btn" id="cs-monsters-3" onclick="setCustom('numMonsters','3')">3</button>
-          <button class="cs-btn" id="cs-monsters-4" onclick="setCustom('numMonsters','4')">4</button>
-        </div>
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:4px;">
-        <label style="color:#fa0; font-size:10px; letter-spacing:3px;">WALL COLOUR</label>
-        <div style="display:flex; gap:5px; flex-wrap:wrap; max-width:380px;">
-          <button class="cs-wall-btn" id="cs-wall-red"       onclick="setCustom('wallColor','red')"       title="Red"        style="background:#8b0000;"></button>
-          <button class="cs-wall-btn" id="cs-wall-orange"    onclick="setCustom('wallColor','orange')"    title="Orange"     style="background:#7a3000;"></button>
-          <button class="cs-wall-btn" id="cs-wall-yellow"    onclick="setCustom('wallColor','yellow')"    title="Yellow"     style="background:#6b6000;"></button>
-          <button class="cs-wall-btn" id="cs-wall-green"     onclick="setCustom('wallColor','green')"     title="Green"      style="background:#0a3a0a;"></button>
-          <button class="cs-wall-btn" id="cs-wall-blue"      onclick="setCustom('wallColor','blue')"      title="Blue"       style="background:#1a2a6a;"></button>
-          <button class="cs-wall-btn" id="cs-wall-lightblue" onclick="setCustom('wallColor','lightblue')" title="Light Blue" style="background:#0a3a5a;"></button>
-          <button class="cs-wall-btn" id="cs-wall-purple"    onclick="setCustom('wallColor','purple')"    title="Purple"     style="background:#3a0a5a;"></button>
-          <button class="cs-wall-btn" id="cs-wall-pink"      onclick="setCustom('wallColor','pink')"      title="Pink"       style="background:#5a0a3a;"></button>
-          <button class="cs-wall-btn" id="cs-wall-brown"     onclick="setCustom('wallColor','brown')"     title="Brown"      style="background:#3a1a00;"></button>
-          <button class="cs-wall-btn" id="cs-wall-black"     onclick="setCustom('wallColor','black')"     title="Black"      style="background:#111;"></button>
-          <button class="cs-wall-btn" id="cs-wall-grey"      onclick="setCustom('wallColor','grey')"      title="Grey"       style="background:#333;"></button>
-          <button class="cs-wall-btn" id="cs-wall-white"     onclick="setCustom('wallColor','white')"     title="White"      style="background:#ddd;"></button>
-          <button class="cs-wall-btn" id="cs-wall-skull"     onclick="setCustom('wallColor','skull')"     title="Skulls"     style="background:#111; font-size:15px; line-height:28px;">&#x1F480;</button>
-        </div>
-        <div id="cs-wall-preview" style="margin-top:3px; font-size:10px; color:#888; letter-spacing:2px;">BLUE</div>
-      </div>
-
-    </div>
-  </div>
-  <button id="sound-toggle-btn" onclick="toggleSound()" style="display:none;">🔊 SOUND: ON</button>
-
-  <div style="display:flex; gap:10px; align-items:flex-start;">
-  <!-- Modifiers panel -->
-  <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
-    <button onclick="toggleModPanel()" id="mod-panel-btn" style="background:#000; border:1px solid #444; color:#666; padding:6px 22px; font-size:12px; letter-spacing:3px; cursor:pointer; font-family:'Courier New',monospace;">⚙ MODIFIERS ▾</button>
-    <div id="mod-panel" style="display:none; flex-direction:column; gap:6px; max-height:340px; overflow-y:auto; padding-right:4px;">
-    <div class="mod-row" onclick="toggleMod('rifle')" id="mod-rifle" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-rifle">☐</span>
-      <span class="mod-label">🔫 RIFLE MODE <span style="color:#555;font-size:10px;">aim, shoot, one shot kill</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('portals')" id="mod-portals" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-portals">☐</span>
-      <span class="mod-label">🌀 PORTALS <span style="color:#555;font-size:10px;">2 portals, anyone can use</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('destroyer')" id="mod-destroyer" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-destroyer">☐</span>
-      <span class="mod-label">💥 DESTROYER <span style="color:#555;font-size:10px;">red dot breaks walls</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('twovs')" id="mod-twovs" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-twovs">☐</span>
-      <span class="mod-label">⚔️ 2 PLAYER VS <span style="color:#555;font-size:10px;">p2 is the killer</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('magnet')" id="mod-magnet" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-magnet">☐</span>
-      <span class="mod-label">🧲 MAGNET <span style="color:#555;font-size:10px;">coins come to you, dot runs away</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('hammer')" id="mod-hammer" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-hammer">☐</span>
-      <span class="mod-label">🔨 HAMMER <span style="color:#555;font-size:10px;">red dot throws hammer at you</span></span>
-    </div>
-    <div class="mod-row" id="mod-oneexit" style="border:1px solid #333; padding:8px 20px; cursor:pointer;">
-      <span class="mod-check" id="chk-oneexit" onclick="toggleExitMod(event)">☐</span>
-      <span class="mod-label" onclick="toggleExitMod(event)">🚪 ONE EXIT <span id="oneexit-variant-label" style="color:#555;font-size:10px;">no coins — just find the door</span></span>
-      <span id="oneexit-variant-btn" style="display:none; margin-left:auto; background:#000; border:1px solid #555; color:#888; padding:2px 10px; font-size:9px; letter-spacing:2px; cursor:pointer; font-family:'Courier New',monospace;" onclick="cycleExitVariant(event)">NORMAL</span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('winmod')" id="mod-winmod" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-winmod">☐</span>
-      <span class="mod-label">🏆 WIN <span style="color:#555;font-size:10px;">you already won</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('zombiemod')" id="mod-zombiemod" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-zombiemod">☐</span>
-      <span class="mod-label">🧟 ZOMBIES <span style="color:#555;font-size:10px;">green dots break walls, spawn from edges</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('hatsmod')" id="mod-hatsmod" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-hatsmod">☐</span>
-      <span class="mod-label">🎩 HATS <span style="color:#555;font-size:10px;">step in a hat, fly to a coin</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('lagmod')" id="mod-lagmod" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-lagmod">☐</span>
-      <span class="mod-label">🐌 LAG <span style="color:#555;font-size:10px;">self explanatory</span></span>
-    </div>
-    </div>
   </div>
 
-  <!-- Debug panel -->
-  <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
-    <button onclick="toggleDebugPanel()" id="debug-panel-btn" style="background:#000; border:1px solid #333; color:#444; padding:6px 22px; font-size:12px; letter-spacing:3px; cursor:pointer; font-family:'Courier New',monospace;">🐛 DEBUG ▾</button>
-    <div id="debug-panel" style="display:none; flex-direction:column; gap:6px; min-width:280px;">
-      <div style="color:#444; font-size:9px; letter-spacing:4px; border-bottom:1px solid #222; padding-bottom:4px; margin-bottom:2px;">DEBUG OPTIONS</div>
-      <div class="mod-row" onclick="toggleMod('hiddencams')" id="mod-hiddencams" style="border:1px solid #222; padding:8px 14px;">
-        <span class="mod-check" id="chk-hiddencams">☐</span>
-        <span class="mod-label">📷 HIDDEN CAMERAS <span style="color:#444;font-size:10px;">always see the red dot</span></span>
-      </div>
-      <div class="mod-row" onclick="toggleMod('newcomer1')" id="mod-newcomer1" style="border:1px solid #222; padding:8px 14px;">
-        <span class="mod-check" id="chk-newcomer1">☐</span>
-        <span class="mod-label">👻 PHASE <span style="color:#444;font-size:10px;">walks through walls, catches you</span></span>
-      </div>
-      <div class="mod-row" onclick="toggleMod('newcomer2')" id="mod-newcomer2" style="border:1px solid #222; padding:8px 14px;">
-        <span class="mod-check" id="chk-newcomer2">☐</span>
-        <span class="mod-label">👁️ EYE <span style="color:#444;font-size:10px;">red dot always knows where you are</span></span>
-      </div>
-      <div class="mod-row" onclick="toggleMod('newcomer3')" id="mod-newcomer3" style="border:1px solid #222; padding:8px 14px;">
-        <span class="mod-check" id="chk-newcomer3">☐</span>
-        <span class="mod-label">🕳️ RANDOM TELEPORT <span style="color:#444;font-size:10px;">replaces your repel with a random teleport</span></span>
-      </div>
-    </div>
-  </div>
+  <!-- Modifier / Cosmetics / Debug panels row -->
+  <div style="display:flex; gap:14px; flex-wrap:wrap; justify-content:center; max-width:900px;">
 
-  <!-- Cosmetics panel -->
-  <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
-    <button onclick="toggleCosmeticPanel()" id="cosmetic-panel-btn" style="background:#000; border:1px solid #444; color:#666; padding:6px 22px; font-size:12px; letter-spacing:3px; cursor:pointer; font-family:'Courier New',monospace;">✨ COSMETICS ▾</button>
-    <div id="cosmetic-panel" style="display:none; flex-direction:column; gap:6px;">
-    <div class="mod-row" onclick="toggleSound()" style="border:1px solid #333; padding:8px 20px;">
-      <span id="sound-cosmetic-check" style="margin-right:8px; color:#4af;">🔊</span>
-      <span class="mod-label">MUTE <span style="color:#555;font-size:10px;">toggle sound on/off</span></span>
+    <!-- Modifiers panel -->
+    <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+      <button onclick="toggleModPanel()" id="mod-panel-btn" style="background:#000; border:1px solid #555; color:#666; padding:6px 22px; font-size:12px; letter-spacing:3px; cursor:pointer; font-family:'Courier New',monospace;">⚙ MODIFIERS ▾</button>
+      <div id="mod-panel" style="display:none; flex-direction:column; gap:6px; min-width:280px;">
+        <div class="mod-row" onclick="toggleMod('rifle')" id="mod-rifle" style="border:1px solid #333; padding:8px 20px;">
+          <span class="mod-check" id="chk-rifle">☐</span>
+          <span class="mod-label">🔫 RIFLE MODE <span style="color:#555;font-size:10px;">aim &amp; shoot the dot</span></span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('portals')" id="mod-portals" style="border:1px solid #333; padding:8px 20px;">
+          <span class="mod-check" id="chk-portals">☐</span>
+          <span class="mod-label">🌀 PORTALS <span style="color:#555;font-size:10px;">teleport around the maze</span></span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('destroyer')" id="mod-destroyer" style="border:1px solid #333; padding:8px 20px;">
+          <span class="mod-check" id="chk-destroyer">☐</span>
+          <span class="mod-label">💥 DESTROYER <span style="color:#555;font-size:10px;">red dot breaks walls</span></span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('twoplayer')" id="mod-twoplayer" style="border:1px solid #333; padding:8px 20px;">
+          <span class="mod-check" id="chk-twoplayer">☐</span>
+          <span class="mod-label">👥 2 PLAYER <span style="color:#555;font-size:10px;">co-op escape together</span></span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('twovs')" id="mod-twovs" style="border:1px solid #333; padding:8px 20px;">
+          <span class="mod-check" id="chk-twovs">☐</span>
+          <span class="mod-label">⚔️ 2 PLAYER VS <span style="color:#555;font-size:10px;">p2 is the killer</span></span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('magnet')" id="mod-magnet" style="border:1px solid #333; padding:8px 20px;">
+          <span class="mod-check" id="chk-magnet">☐</span>
+          <span class="mod-label">🧲 MAGNET <span style="color:#555;font-size:10px;">coins come to you, dot runs away</span></span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('hammer')" id="mod-hammer" style="border:1px solid #333; padding:8px 20px;">
+          <span class="mod-check" id="chk-hammer">☐</span>
+          <span class="mod-label">🔨 HAMMER <span style="color:#555;font-size:10px;">red dot throws hammers</span></span>
+        </div>
+        <div class="mod-row" id="mod-oneexit" style="border:1px solid #333; padding:8px 20px; cursor:pointer;">
+          <span class="mod-check" id="chk-oneexit" onclick="toggleExitMod(event)">☐</span>
+          <span class="mod-label" onclick="toggleExitMod(event)">🚪 ONE EXIT <span id="oneexit-variant-label" style="color:#555;font-size:10px;">no coins — just find the door</span></span>
+          <span id="oneexit-variant-btn" style="display:none; margin-left:auto; background:#000; border:1px solid #555; color:#888; padding:2px 10px; font-size:9px; letter-spacing:2px; cursor:pointer; font-family:'Courier New',monospace;" onclick="cycleExitVariant(event)">NORMAL</span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('bots16')" id="mod-bots16" style="border:1px solid #333; padding:8px 20px;">
+          <span class="mod-check" id="chk-bots16">☐</span>
+          <span class="mod-label">🤖 16 BOTS <span style="color:#555;font-size:10px;">16 bots compete to collect coins</span></span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('winmod')" id="mod-winmod" style="border:1px solid #333; padding:8px 20px;">
+          <span class="mod-check" id="chk-winmod">☐</span>
+          <span class="mod-label">🏆 WIN <span style="color:#555;font-size:10px;">you already won</span></span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('zombiemod')" id="mod-zombiemod" style="border:1px solid #333; padding:8px 20px;">
+          <span class="mod-check" id="chk-zombiemod">☐</span>
+          <span class="mod-label">🧟 ZOMBIES <span style="color:#555;font-size:10px;">green dots break walls, spawn from edges</span></span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('hatsmod')" id="mod-hatsmod" style="border:1px solid #333; padding:8px 20px;">
+          <span class="mod-check" id="chk-hatsmod">☐</span>
+          <span class="mod-label">🎩 HATS <span style="color:#555;font-size:10px;">step in a hat, fly to a coin</span></span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('lagmod')" id="mod-lagmod" style="border:1px solid #333; padding:8px 20px;">
+          <span class="mod-check" id="chk-lagmod">☐</span>
+          <span class="mod-label">🐌 LAG <span style="color:#555;font-size:10px;">self explanatory</span></span>
+        </div>
+      </div>
     </div>
-    <div class="mod-row" onclick="toggleMod('bossbar')" id="mod-bossbar" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-bossbar">☐</span>
-      <span class="mod-label">👑 BOSS BAR <span style="color:#555;font-size:10px;">red dot has a health bar</span></span>
+
+    <!-- Cosmetics panel -->
+    <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+      <button onclick="toggleCosmeticPanel()" id="cosmetic-panel-btn" style="background:#000; border:1px solid #444; color:#666; padding:6px 22px; font-size:12px; letter-spacing:3px; cursor:pointer; font-family:'Courier New',monospace;">✨ COSMETICS ▾</button>
+      <div id="cosmetic-panel" style="display:none; flex-direction:column; gap:6px;">
+        <div class="mod-row" onclick="toggleSound()" style="border:1px solid #333; padding:8px 20px;">
+          <span id="sound-cosmetic-check" style="margin-right:8px; color:#4af;">🔊</span>
+          <span class="mod-label">MUTE <span style="color:#555;font-size:10px;">toggle sound on/off</span></span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('bossbar')" id="mod-bossbar" style="border:1px solid #333; padding:8px 20px;">
+          <span class="mod-check" id="chk-bossbar">☐</span>
+          <span class="mod-label">👑 BOSS BAR <span style="color:#555;font-size:10px;">red dot has a health bar</span></span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('goofymsgs')" id="mod-goofymsgs" style="border:1px solid #333; padding:8px 20px;">
+          <span class="mod-check" id="chk-goofymsgs">☐</span>
+          <span class="mod-label">😂 GOOFY AH MESSAGES <span style="color:#555;font-size:10px;">ez or lol</span></span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('broccolidog')" id="mod-broccolidog" style="border:1px solid #333; padding:8px 20px;">
+          <span class="mod-check" id="chk-broccolidog">☐</span>
+          <span class="mod-label">🥦🐶 BROCCOLI DOG <span style="color:#555;font-size:10px;">the dot is a dog or broccoli</span></span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('decor')" id="mod-decor" style="border:1px solid #333; padding:8px 20px;">
+          <span class="mod-check" id="chk-decor">☑</span>
+          <span class="mod-label">🎨 DECOR <span style="color:#555;font-size:10px;">wall emoji decorations on/off</span></span>
+        </div>
+      </div>
     </div>
-    <div class="mod-row" onclick="toggleMod('decor')" id="mod-decor" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-decor">☑</span>
-      <span class="mod-label">🎨 DECOR <span style="color:#555;font-size:10px;">wall emoji decorations on/off</span></span>
+
+    <!-- Debug panel -->
+    <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+      <button onclick="toggleDebugPanel()" id="debug-panel-btn" style="background:#000; border:1px solid #333; color:#444; padding:6px 22px; font-size:12px; letter-spacing:3px; cursor:pointer; font-family:'Courier New',monospace;">🐛 DEBUG ▾</button>
+      <div id="debug-panel" style="display:none; flex-direction:column; gap:6px; min-width:280px;">
+        <div style="color:#444; font-size:9px; letter-spacing:4px; border-bottom:1px solid #222; padding-bottom:4px; margin-bottom:2px;">DEBUG OPTIONS</div>
+        <div class="mod-row" onclick="toggleMod('hiddencams')" id="mod-hiddencams" style="border:1px solid #222; padding:8px 14px;">
+          <span class="mod-check" id="chk-hiddencams">☐</span>
+          <span class="mod-label">📷 HIDDEN CAMERAS <span style="color:#444;font-size:10px;">always see red dot</span></span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('newcomer1')" id="mod-newcomer1" style="border:1px solid #222; padding:8px 14px;">
+          <span class="mod-check" id="chk-newcomer1">☐</span>
+          <span class="mod-label">👻 PHASE <span style="color:#444;font-size:10px;">walk through walls</span></span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('newcomer2')" id="mod-newcomer2" style="border:1px solid #222; padding:8px 14px;">
+          <span class="mod-check" id="chk-newcomer2">☐</span>
+          <span class="mod-label">👁️ EYE <span style="color:#444;font-size:10px;">red dot always knows where you are</span></span>
+        </div>
+        <div class="mod-row" onclick="toggleMod('newcomer3')" id="mod-newcomer3" style="border:1px solid #222; padding:8px 14px;">
+          <span class="mod-check" id="chk-newcomer3">☐</span>
+          <span class="mod-label">🕳️ RANDOM TELEPORT <span style="color:#444;font-size:10px;">replaces your repel with a random teleport</span></span>
+        </div>
+      </div>
     </div>
-    <div class="mod-row" onclick="toggleMod('goofymsgs')" id="mod-goofymsgs" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-goofymsgs">☐</span>
-      <span class="mod-label">😂 GOOFY AH MESSAGES <span style="color:#555;font-size:10px;">ez or lol</span></span>
-    </div>
-    <div class="mod-row" onclick="toggleMod('broccolidog')" id="mod-broccolidog" style="border:1px solid #333; padding:8px 20px;">
-      <span class="mod-check" id="chk-broccolidog">☐</span>
-      <span class="mod-label">🥦🐶 BROCCOLI DOG <span style="color:#555;font-size:10px;">red dot flashes broccoli ↔ dog</span></span>
-    </div>
-    </div>
-  </div>
+
   </div>
 
   <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap; justify-content:center;">
@@ -554,7 +470,7 @@ let itemEntities = []; // [{type,c,r,collected,fleeing}]
 let fakeDoors = []; // [{c,r}] fake door positions (fakedoors modifier)
 let currentPlatform = 'pc';
 let soundEnabled = true;
-const modifiers = { rifle: false, shoot: false, nocooldown: false, oneshot: false, portals: false, destroyer: false, twoplayer: false, twovs: false, bossbar: false, goofymsgs: false, magnet: false, broccolidog: false, hammer: false, oneexit: false, hiddencams: false, newcomer1: false, newcomer2: false, newcomer3: false, decor: true, winmod: false, zombiemod: false, hatsmod: false, lagmod: false, fakedoors: false };
+const modifiers = { rifle: false, shoot: false, nocooldown: false, oneshot: false, portals: false, destroyer: false, twoplayer: false, twovs: false, bossbar: false, goofymsgs: false, magnet: false, broccolidog: false, hammer: false, oneexit: false, hiddencams: false, newcomer1: false, newcomer2: false, newcomer3: false, decor: true, bots16: false, winmod: false, zombiemod: false, hatsmod: false, lagmod: false, fakedoors: false };
 
 function toggleHelp() {
   const o = document.getElementById('help-overlay');
@@ -657,6 +573,7 @@ function computeWinSmiles() {
   if (modifiers.portals)    add(-1, '🌀 Portals');
   if (modifiers.destroyer)  add(+1, '💥 Destroyer');
   if (modifiers.twoplayer)  add(+1, '👥 2 Player');
+  if (modifiers.bots16)     add(+2, '🤖 16 Bots');
   if (modifiers.magnet)     add(-2, '🧲 Magnet');
   if (modifiers.hammer)     add(+1, '🔨 Hammer');
   if (modifiers.twovs)      add(+0, '⚔️ 2 Player VS');
@@ -1171,7 +1088,7 @@ function startFromMenu() {
   if (ab) ab.style.display = 'flex';
   if (mg) mg.style.display = 'block';
   const ab2 = document.getElementById('ability-bar-p2');
-  if (ab2) ab2.style.display = modifiers.twovs ? 'flex' : 'none';
+  if (ab2) ab2.style.display = (modifiers.twoplayer || modifiers.twovs) ? 'flex' : 'none';
   // Show boss bar if modifier on
   const bb = document.getElementById('boss-bar');
   if (bb) bb.style.display = modifiers.bossbar ? 'flex' : 'none';
@@ -1536,6 +1453,16 @@ function initGame() {
     if(elTotal) elTotal.textContent = totalCoins;
   }
 
+  // 16 bots — spawn at random open cells
+  bots = [];
+  if (modifiers.bots16) {
+    const botOpen = open.filter(p => !(p.c===1&&p.r===1) && !(p.c===ep.c&&p.r===ep.r));
+    botOpen.sort(()=>Math.random()-0.5);
+    for (let i=0; i<16 && i<botOpen.length; i++) {
+      const bp=botOpen[i];
+      bots.push({c:bp.c,r:bp.r,x:bp.c*CELL+CELL/2,y:bp.r*CELL+CELL/2,moveTimer:0,score:0});
+    }
+  }
   gameOver = false;
   won = false;
   debugWon = false;
@@ -1786,6 +1713,8 @@ let newcomers = []; // debug: unkillable ghosts [{x,y,c,r,moveTimer}]
 let player2 = null;
 let lastMoveTime2 = 0;
 let player3 = null;
+// 16 bots
+let bots = []; // [{c,r,x,y,moveTimer,score}]
 let lastMoveTime3 = 0;
 let repelActive3 = false;
 let repelCooldownEnd3 = 0;
@@ -2501,6 +2430,25 @@ function draw(now) {
       // Glow outline
       ctx.strokeStyle=modHatCooldown>0?'#555':'#c8f';ctx.lineWidth=1.5;
       ctx.beginPath();ctx.ellipse(hx,hy+8,18,5,0,0,Math.PI*2);ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // Draw 16 bots
+  if (modifiers.bots16 && bots.length) {
+    const btPulse=0.7+0.3*Math.sin(now/250);
+    for(const bot of bots){
+      const btDist=Math.abs(bot.c-player.c)+Math.abs(bot.r-player.r);
+      const btAlpha=btDist<=8?1:btDist<=10?(10-btDist)/2:0;
+      if(btAlpha<=0)continue;
+      ctx.save();
+      ctx.globalAlpha=btAlpha*0.85;
+      ctx.shadowBlur=10*btPulse; ctx.shadowColor='#48f';
+      const btg=ctx.createRadialGradient(bot.x,bot.y,2,bot.x,bot.y,11);
+      btg.addColorStop(0,'#adf'); btg.addColorStop(0.5,'#48f'); btg.addColorStop(1,'#013');
+      ctx.fillStyle=btg; ctx.beginPath(); ctx.arc(bot.x,bot.y,10,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=btAlpha*0.9; ctx.font='7px Courier New'; ctx.fillStyle='#fff';
+      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🤖',bot.x,bot.y);
       ctx.restore();
     }
   }
@@ -3508,6 +3456,31 @@ function gameLoop(now) {
               _digCands.push({c:nc2,r:nr2});
           }
           if(_digCands.length){ const _dp=_digCands[Math.floor(Math.random()*_digCands.length)]; enemy.c=_dp.c;enemy.r=_dp.r;enemy.x=_dp.c*CELL+CELL/2;enemy.y=_dp.r*CELL+CELL/2; }
+        }
+      }
+    }
+
+    // 16 bots — BFS toward nearest coin, collect it
+    if (modifiers.bots16 && bots.length) {
+      for (const bot of bots) {
+        bot.moveTimer++;
+        if (bot.moveTimer < 22) continue;
+        bot.moveTimer = 0;
+        // Find nearest uncollected coin
+        let tgt=null, td=9999;
+        for(const coin of coins){
+          if(coin.collected)continue;
+          const d=Math.abs(coin.c-bot.c)+Math.abs(coin.r-bot.r);
+          if(d<td){td=d;tgt=coin;}
+        }
+        if(tgt){
+          const path=bfsPath(bot.c,bot.r,tgt.c,tgt.r);
+          if(path.length>1){bot.c=path[1].c;bot.r=path[1].r;bot.x=bot.c*CELL+CELL/2;bot.y=bot.r*CELL+CELL/2;}
+          // Collect coin
+          if(bot.c===tgt.c&&bot.r===tgt.r){tgt.collected=true;bot.score++;collectedCoins++;
+            const cc=document.getElementById('coinCount');if(cc)cc.textContent=collectedCoins;
+            if(collectedCoins>=totalCoins){won=true;if(laughTimeout){clearTimeout(laughTimeout);laughTimeout=null;}const ws=document.getElementById('win-screen');computeWinSmiles();if(ws)ws.style.display='flex';cancelAnimationFrame(animFrame);return;}
+          }
         }
       }
     }
